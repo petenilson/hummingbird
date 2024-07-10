@@ -4,7 +4,8 @@ CREATE TABLE transfers (
   from_account_id int NOT NULL,
   to_account_id int NOT NULL,
   created_at TEXT NOT NULL,
-  amount int NOT NULL
+  amount int NOT NULL,
+  transaction_id int NOT NULL
 );
 
 CREATE TABLE transactions (
@@ -25,9 +26,9 @@ CREATE TABLE entrys (
 );
 
 CREATE TABLE accounts (
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
   id SERIAL PRIMARY KEY,
   balance INTEGER NOT NULL,
-  name VARCHAR(255) NOT NULL,
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
+  name VARCHAR(255) NOT NULL
 );

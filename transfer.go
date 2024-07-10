@@ -12,6 +12,7 @@ type InterAccountTransfer struct {
 	Amount        int
 	CreatedAt     time.Time
 	Transaction   *Transaction
+	TransactionID int
 }
 
 func NewTransfer(
