@@ -33,7 +33,6 @@ func (ts *TransactionService) CreateTransaction(ctx context.Context, transaction
 			return err
 		}
 	}
-
 	return tx.Commit(ctx)
 }
 
@@ -82,6 +81,7 @@ func findTransactionById(ctx context.Context, tx *Tx, id int) (*ledger.Transacti
 	if count == 0 {
 		return nil, errors.New("No Transactions Found")
 	}
+	// TODO: attach entrys here
 	return transactions[0], nil
 }
 

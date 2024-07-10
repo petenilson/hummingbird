@@ -35,6 +35,11 @@ func TestTransactionService_CreateTransfer(t *testing.T) {
 			t.Fatal(err)
 		}
 
+		got, err := ts.FindTransferById(cx, transfer.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+
 		want := &ledger.InterAccountTransfer{
 			ID:            transfer.ID,
 			Description:   "Test Transfer",
@@ -66,8 +71,8 @@ func TestTransactionService_CreateTransfer(t *testing.T) {
 				},
 			},
 		}
-		if eq := cmp.Equal(transfer, want); eq != true {
-			t.Fatalf(cmp.Diff(transfer, want))
+		if eq := cmp.Equal(got, want); eq != true {
+			t.Fatalf(cmp.Diff(got, want))
 		}
 	})
 }

@@ -26,7 +26,7 @@ func (ts *TransferService) CreateTransfer(
 	if err != nil {
 		return err
 	}
-	defer tx.Commit(ctx)
+	defer tx.Rollback(ctx)
 
 	// Lock accounts rows
 	if err := lockAccountRows(
@@ -60,6 +60,7 @@ func (ts *TransferService) CreateTransfer(
 	if err := createTransaction(ctx, tx, transfer.Transaction); err != nil {
 		return err
 	}
+	transfer.TransactionID = transfer.Transaction.ID
 
 	// Create entries for transaction
 	for _, v := range transfer.Transaction.Entrys {
@@ -73,20 +74,31 @@ func (ts *TransferService) CreateTransfer(
 	if err := createTransfer(ctx, tx, transfer); err != nil {
 		return err
 	}
-	return nil
+	return tx.Commit(ctx)
 }
 
-func (ts *TransferService) FindTransferById(ctx context.Context, id int) (*ledger.InterAccountTransfer, error) {
+func (ts *TransferService) FindTransferById(
+	ctx context.Context, id int,
+) (*ledger.InterAccountTransfer, error) {
 	tx, err := ts.db.BeginTx(ctx)
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Commit(ctx)
+	defer tx.Rollback(ctx)
+
 	transfer, err := findTransferById(ctx, tx, id)
 	if err != nil {
 		return nil, err
 	}
-	// Attach accounts
+	// TODO: this follows the foreign keys relationship
+	// and introduces additional queries. Maybe give the option
+	// to not follow relationships or do so in a more performant way.
+	if err := attachTransaction(ctx, tx, transfer); err != nil {
+		return nil, err
+	} else if err = attachEntrys(ctx, tx, transfer.Transaction); err != nil {
+		return nil, err
+	}
+
 	return transfer, nil
 }
 
@@ -123,6 +135,7 @@ func findTransfers(
       to_account_id,
       created_at,
       amount,
+    	transaction_id,
 		  COUNT(*) OVER()
 		FROM transfers
 		WHERE `+strings.Join(where, " AND ")+`
@@ -145,6 +158,7 @@ func findTransfers(
 			&transfer.ToAccountID,
 			(*NullTime)(&transfer.CreatedAt),
 			&transfer.Amount,
+			&transfer.TransactionID,
 			&transfer_count,
 		); err != nil {
 			return nil, 0, err
@@ -157,6 +171,19 @@ func findTransfers(
 	return transfers, transfer_count, nil
 }
 
+func attachTransaction(
+	ctx context.Context, tx *Tx, transfer *ledger.InterAccountTransfer,
+) error {
+	if transaction, err := findTransactionById(
+		ctx, tx, transfer.TransactionID,
+	); err != nil {
+		return err
+	} else {
+		transfer.Transaction = transaction
+	}
+	return nil
+}
+
 func createTransfer(ctx context.Context, tx *Tx, transfer *ledger.InterAccountTransfer) error {
 	transfer.CreatedAt = tx.asof
 	// Insert row into database.
@@ -166,9 +193,10 @@ func createTransfer(ctx context.Context, tx *Tx, transfer *ledger.InterAccountTr
 			to_account_id,
 			amount,
 			reason,
-			created_at
+			created_at,
+			transaction_id
 		)
-		VALUES ($1, $2, $3, $4, $5)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id
 	`,
 		transfer.FromAccountID,
@@ -176,6 +204,7 @@ func createTransfer(ctx context.Context, tx *Tx, transfer *ledger.InterAccountTr
 		transfer.Amount,
 		transfer.Description,
 		(*NullTime)(&transfer.CreatedAt),
+		transfer.TransactionID,
 	).Scan(&transfer.ID)
 	if err != nil {
 		return err

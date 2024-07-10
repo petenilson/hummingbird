@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -30,12 +31,92 @@ func (as *AccountService) CreateAccount(
 	if err := createAccount(ctx, tx, account); err != nil {
 		return err
 	}
-	return nil
+	return tx.Commit(ctx)
+}
 
+func (as *AccountService) FindAccountByID(
+	ctx context.Context, account_id int,
+) (*ledger.Account, error) {
+	tx, err := as.db.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+	return findAccountById(ctx, tx, account_id)
+}
+
+func findAccountById(
+	ctx context.Context, tx *Tx, account_id int,
+) (*ledger.Account, error) {
+	accounts, count, err := findAccounts(
+		ctx,
+		tx,
+		&ledger.AccountFilter{
+			ID: &account_id,
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	if count == 0 {
+		// TODO: Better error handling here
+		return nil, errors.New("Account Not Found.")
+	} else {
+		return accounts[0], nil
+	}
+}
+
+func findAccounts(
+	ctx context.Context, tx *Tx, filter *ledger.AccountFilter,
+) ([]*ledger.Account, int, error) {
+	where, args := []string{"1 = 1"}, []interface{}{}
+	if v := filter.ID; v != nil {
+		where, args = append(where, "id = $1"), append(args, *v)
+	}
+	// Execue query with limiting WHERE clause and LIMIT/OFFSET injected.
+	rows, err := tx.Query(ctx, `
+		SELECT 
+      id,
+    	balance,
+    	name,
+      created_at,
+      updated_at,
+		  COUNT(*) OVER()
+		FROM accounts
+		WHERE `+strings.Join(where, " AND ")+`
+		ORDER BY id ASC
+		`,
+		args...,
+	)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+	accounts := make([]*ledger.Account, 0)
+	count := 0
+	for rows.Next() {
+		var account ledger.Account
+		if err := rows.Scan(
+			&account.ID,
+			&account.Balance,
+			&account.Name,
+			(*NullTime)(&account.CreatedAt),
+			(*NullTime)(&account.UpdatedAt),
+			&count,
+		); err != nil {
+			return nil, 0, err
+		}
+		accounts = append(accounts, &account)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+	return accounts, count, nil
 }
 
 func createAccount(ctx context.Context, tx *Tx, account *ledger.Account) error {
 	account.CreatedAt = tx.asof
+	account.UpdatedAt = tx.asof
 	// Insert row into database.
 	err := tx.QueryRow(ctx, `
 		INSERT INTO accounts (
