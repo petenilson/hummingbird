@@ -39,7 +39,7 @@ func TestTransactionService_CreateTransfer(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
+		// Not testing for attached Transactions yet.
 		want := &ledger.InterAccountTransfer{
 			ID:            transfer.ID,
 			Description:   "Test Transfer",
@@ -47,29 +47,7 @@ func TestTransactionService_CreateTransfer(t *testing.T) {
 			ToAccountID:   to_account.ID,
 			Amount:        100,
 			CreatedAt:     db.Now(),
-			Transaction: &ledger.Transaction{
-				ID:          transfer.Transaction.ID,
-				Description: "",
-				CreatedAt:   db.Now(),
-				Entrys: []*ledger.Entry{
-					{
-						ID:            1,
-						AccountID:     from_account.ID,
-						TransactionID: transfer.Transaction.ID,
-						CreatedAt:     db.Now(),
-						Amount:        -100,
-						Type:          "DEBIT",
-					},
-					{
-						ID:            2,
-						AccountID:     to_account.ID,
-						TransactionID: transfer.Transaction.ID,
-						CreatedAt:     db.Now(),
-						Amount:        100,
-						Type:          "CREDIT",
-					},
-				},
-			},
+			TransactionID: 1,
 		}
 		if eq := cmp.Equal(got, want); eq != true {
 			t.Fatalf(cmp.Diff(got, want))

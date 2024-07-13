@@ -15,17 +15,28 @@ func TestTransactionService_FindTransactionById(t *testing.T) {
 		db, clean_up := MustOpenDB(t)
 		defer clean_up()
 		ts := postgres.NewTransactionService(db)
+		as := postgres.NewAccountService(db)
+
+		to_account := &ledger.Account{Name: "To Account"}
+		from_account := &ledger.Account{Name: "From Account"}
+		if err := as.CreateAccount(cx, to_account); err != nil {
+			t.Fatal(err)
+		} else if err := as.CreateAccount(cx, from_account); err != nil {
+			t.Fatal(err)
+		}
 
 		tx := &ledger.Transaction{
 			Description: "Test Transaction",
 			Entrys: []*ledger.Entry{
 				{
-					Amount: -100,
-					Type:   ledger.DEBIT,
+					AccountID: from_account.ID,
+					Amount:    -100,
+					Type:      ledger.DEBIT,
 				},
 				{
-					Amount: 100,
-					Type:   ledger.CREDIT,
+					AccountID: to_account.ID,
+					Amount:    100,
+					Type:      ledger.CREDIT,
 				},
 			},
 		}

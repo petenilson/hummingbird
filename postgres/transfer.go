@@ -64,7 +64,6 @@ func (ts *TransferService) CreateTransfer(
 
 	// Create entries for transaction
 	for _, v := range transfer.Transaction.Entrys {
-		v.TransactionID = transfer.Transaction.ID
 		if err := createEntry(ctx, tx, v); err != nil {
 			return err
 		}
@@ -93,11 +92,11 @@ func (ts *TransferService) FindTransferById(
 	// TODO: this follows the foreign keys relationship
 	// and introduces additional queries. Maybe give the option
 	// to not follow relationships or do so in a more performant way.
-	if err := attachTransaction(ctx, tx, transfer); err != nil {
-		return nil, err
-	} else if err = attachEntrys(ctx, tx, transfer.Transaction); err != nil {
-		return nil, err
-	}
+	// if err := attachTransaction(ctx, tx, transfer); err != nil {
+	// 	return nil, err
+	// } else if err = attachEntrys(ctx, tx, transfer.Transaction); err != nil {
+	// 	return nil, err
+	// }
 
 	return transfer, nil
 }

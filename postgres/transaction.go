@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/petenilson/go-ledger"
@@ -27,10 +28,21 @@ func (ts *TransactionService) CreateTransaction(ctx context.Context, transaction
 		return err
 	}
 
+	// TODO: This is slow. Bulk insert the entries and transaction entrys here
 	for _, v := range transaction.Entrys {
-		v.TransactionID = transaction.ID
 		if err := createEntry(ctx, tx, v); err != nil {
 			return err
+		}
+		if err := createTransactionEntry(
+			ctx,
+			tx,
+			&ledger.TransactionEntry{
+				CreatedAt:     v.CreatedAt,
+				EntryID:       v.ID,
+				TransactionID: transaction.ID,
+			},
+		); err != nil {
+			return fmt.Errorf("CreateTransaction: %w", err)
 		}
 	}
 	return tx.Commit(ctx)
@@ -46,7 +58,7 @@ func (ts *TransactionService) FindTransactionById(ctx context.Context, id int) (
 	if transaction, err := findTransactionById(ctx, tx, id); err != nil {
 		return nil, err
 	} else if err = attachEntrys(ctx, tx, transaction); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("FindTransactionById: %v", err)
 	} else {
 		return transaction, nil
 	}
@@ -81,7 +93,6 @@ func findTransactionById(ctx context.Context, tx *Tx, id int) (*ledger.Transacti
 	if count == 0 {
 		return nil, errors.New("No Transactions Found")
 	}
-	// TODO: attach entrys here
 	return transactions[0], nil
 }
 

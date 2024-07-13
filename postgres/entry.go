@@ -2,10 +2,33 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/petenilson/go-ledger"
 )
+
+type EntryService struct {
+	db *DB
+}
+
+func NewEntryService(db *DB) *EntryService {
+	return &EntryService{
+		db: db,
+	}
+}
+
+func (es *EntryService) CreateEntry(ctx context.Context, entry *ledger.Entry) error {
+	tx, err := es.db.BeginTx(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	if err = createEntry(ctx, tx, entry); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
 
 func createEntry(ctx context.Context, tx *Tx, entry *ledger.Entry) error {
 	entry.CreatedAt = tx.asof
@@ -13,16 +36,14 @@ func createEntry(ctx context.Context, tx *Tx, entry *ledger.Entry) error {
 	err := tx.QueryRow(ctx, `
 		INSERT INTO entrys (
 			account_id,
-			transaction_id,
 			created_at,
 			amount,
 			type
 		)
-		VALUES ($1, $2, $3, $4, $5)
+		VALUES ($1, $2, $3, $4)
 		RETURNING id
 	`,
 		entry.AccountID,
-		entry.TransactionID,
 		(*NullTime)(&entry.CreatedAt),
 		entry.Amount,
 		entry.Type,
@@ -38,15 +59,14 @@ func createEntry(ctx context.Context, tx *Tx, entry *ledger.Entry) error {
 func attachEntrys(
 	ctx context.Context, tx *Tx, transaction *ledger.Transaction,
 ) error {
-	if entries, _, err := findEntrys(
+	if entries, _, err := findEntriesByTransactionID(
 		ctx,
 		tx,
-		&ledger.EntryFilter{
-			TransactionID: &transaction.ID,
-		},
+		transaction.ID,
 	); err != nil {
 		return err
 	} else {
+		fmt.Printf("%+v", entries)
 		transaction.Entrys = entries
 	}
 	return nil
@@ -56,14 +76,13 @@ func findEntrys(
 	ctx context.Context, tx *Tx, filter *ledger.EntryFilter,
 ) ([]*ledger.Entry, int, error) {
 	where, args := []string{"1 = 1"}, []interface{}{}
-	if v := filter.TransactionID; v != nil {
-		where, args = append(where, "transaction_id = $1"), append(args, *v)
+	if v := filter.AccountID; v != nil {
+		where, args = append(where, "account_id = $1"), append(args, *v)
 	}
 	rows, err := tx.Query(ctx, `
 		SELECT 
       id,
     	account_id,
-      transaction_id,
       created_at,
     	amount,
     	type,
@@ -85,7 +104,6 @@ func findEntrys(
 		if err := rows.Scan(
 			&entry.ID,
 			&entry.AccountID,
-			&entry.TransactionID,
 			(*NullTime)(&entry.CreatedAt),
 			&entry.Amount,
 			&entry.Type,
