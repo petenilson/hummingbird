@@ -23,7 +23,7 @@ func (as *AccountService) CreateAccount(
 	ctx context.Context,
 	account *ledger.Account,
 ) error {
-	tx, err := as.db.BeginTx(ctx)
+	tx, err := as.db.Begin(ctx)
 	defer tx.Rollback(ctx)
 	if err != nil {
 		return err
@@ -37,7 +37,7 @@ func (as *AccountService) CreateAccount(
 func (as *AccountService) FindAccountByID(
 	ctx context.Context, account_id int,
 ) (*ledger.Account, error) {
-	tx, err := as.db.BeginTx(ctx)
+	tx, err := as.db.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}

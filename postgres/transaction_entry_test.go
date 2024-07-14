@@ -11,11 +11,9 @@ import (
 func TestTransactionService_FindEntrysByTransactionID(t *testing.T) {
 	t.Run("OK", func(*testing.T) {
 		cx := context.Background()
-		db, clean_up := MustOpenDB(t)
-		defer clean_up()
-		// tes := postgres.NewTransactionEntryService(db)
-		es := postgres.NewEntryService(db)
-		as := postgres.NewAccountService(db)
+		// tes := postgres.NewTransactionEntryService(TestDB)
+		es := postgres.NewEntryService(DB)
+		as := postgres.NewAccountService(DB)
 
 		to_account := &ledger.Account{Name: "To Account"}
 		fm_account := &ledger.Account{Name: "From Account"}

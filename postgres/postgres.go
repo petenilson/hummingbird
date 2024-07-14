@@ -16,6 +16,12 @@ import (
 //go:embed migrations/*.sql
 var migrationsFS embed.FS
 
+type DB_ interface {
+	Open() error
+	Close() error
+	Begin(context.Context) (*Tx, error)
+}
+
 type DB struct {
 	conn_pool *pgxpool.Pool
 	ctx       context.Context // background context
@@ -56,7 +62,7 @@ func (db *DB) Close() error {
 	return nil
 }
 
-func (db *DB) BeginTx(ctx context.Context) (*Tx, error) {
+func (db *DB) Begin(ctx context.Context) (*Tx, error) {
 	tx, err := db.conn_pool.Begin(ctx)
 	if err != nil {
 		return nil, err

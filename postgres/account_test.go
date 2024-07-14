@@ -12,10 +12,8 @@ import (
 func TestTransactionService_FindAccounts(t *testing.T) {
 	t.Run("OK", func(*testing.T) {
 		cx := context.Background()
-		db, clean_up := MustOpenDB(t)
-		defer clean_up()
 
-		as := postgres.NewAccountService(db)
+		as := postgres.NewAccountService(DB)
 
 		to_account := ledger.NewAccount("To Account")
 		if err := as.CreateAccount(cx, to_account); err != nil {
@@ -39,8 +37,8 @@ func TestTransactionService_FindAccounts(t *testing.T) {
 			ID:        to_account.ID,
 			Balance:   0,
 			Name:      "To Account",
-			CreatedAt: db.Now(),
-			UpdatedAt: db.Now(),
+			CreatedAt: DB.Now(),
+			UpdatedAt: DB.Now(),
 		}
 		if eq := cmp.Equal(got_to_account, want_to_account); eq != true {
 			t.Fatalf(cmp.Diff(got_to_account, want_to_account))
@@ -50,8 +48,8 @@ func TestTransactionService_FindAccounts(t *testing.T) {
 			ID:        fm_account.ID,
 			Balance:   0,
 			Name:      "From Account",
-			CreatedAt: db.Now(),
-			UpdatedAt: db.Now(),
+			CreatedAt: DB.Now(),
+			UpdatedAt: DB.Now(),
 		}
 		if eq := cmp.Equal(got_fm_account, want_fm_account); eq != true {
 			t.Fatalf(cmp.Diff(got_fm_account, want_fm_account))

@@ -22,7 +22,7 @@ func (ts *TransferService) CreateTransfer(
 	ctx context.Context, transfer *ledger.InterAccountTransfer,
 ) error {
 	// Start Transaction
-	tx, err := ts.db.BeginTx(ctx)
+	tx, err := ts.db.Begin(ctx)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (ts *TransferService) CreateTransfer(
 func (ts *TransferService) FindTransferById(
 	ctx context.Context, id int,
 ) (*ledger.InterAccountTransfer, error) {
-	tx, err := ts.db.BeginTx(ctx)
+	tx, err := ts.db.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}

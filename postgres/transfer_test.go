@@ -12,10 +12,8 @@ import (
 func TestTransactionService_CreateTransfer(t *testing.T) {
 	t.Run("OK", func(*testing.T) {
 		cx := context.Background()
-		db, clean_up := MustOpenDB(t)
-		defer clean_up()
-		ts := postgres.NewTransferService(db)
-		as := postgres.NewAccountService(db)
+		ts := postgres.NewTransferService(DB)
+		as := postgres.NewAccountService(DB)
 
 		to_account := &ledger.Account{Name: "To Account"}
 		from_account := &ledger.Account{Name: "From Account"}
@@ -46,8 +44,8 @@ func TestTransactionService_CreateTransfer(t *testing.T) {
 			FromAccountID: from_account.ID,
 			ToAccountID:   to_account.ID,
 			Amount:        100,
-			CreatedAt:     db.Now(),
-			TransactionID: 1,
+			CreatedAt:     DB.Now(),
+			TransactionID: got.TransactionID,
 		}
 		if eq := cmp.Equal(got, want); eq != true {
 			t.Fatalf(cmp.Diff(got, want))

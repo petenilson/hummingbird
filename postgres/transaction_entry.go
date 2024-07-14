@@ -21,7 +21,7 @@ func NewTransactionEntryService(db *DB) *TransactionEntryService {
 func (tas *TransactionEntryService) FindEntrsyByTransactionID(
 	ctx context.Context, transaction_id int,
 ) ([]*ledger.Entry, int, error) {
-	tx, err := tas.db.BeginTx(ctx)
+	tx, err := tas.db.Begin(ctx)
 	if err != nil {
 		return nil, 0, err
 	}

@@ -1,6 +1,9 @@
 package postgres_test
 
 import (
+	"fmt"
+	"log"
+	"os"
 	"testing"
 	"time"
 
@@ -12,6 +15,37 @@ import (
 	container_postgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
+
+var DB *postgres.DB
+
+func TestMain(m *testing.M) {
+	// Setup code...
+	db, err := MustReturnTestDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	DB = db
+	db.Now = func() time.Time {
+		return time.Date(2000, time.January, 1, 1, 0, 0, 0, time.UTC)
+	}
+
+	exit_code := m.Run()
+
+	// Teardown code...
+	db.Close()
+	os.Exit(exit_code)
+}
+
+// TestDB allows us to define at test time what will be returned
+// when Begin is called on the DB. Our goal is to have begin return
+// an inner pseudo transaction that can be reverted after every
+// test function.
+type TestDB struct {
+	db      *postgres.DB
+	BeginFn func(context.Context) (*postgres.Tx, error)
+	outerTx *postgres.Tx
+	Now     func() time.Time
+}
 
 func MustStartContainer(ctx context.Context) (*container_postgres.PostgresContainer, error) {
 	if postgresContainer, err := container_postgres.Run(ctx,
@@ -30,29 +64,23 @@ func MustStartContainer(ctx context.Context) (*container_postgres.PostgresContai
 	}
 }
 
-func MustOpenDB(t *testing.T) (*postgres.DB, func()) {
+func MustReturnTestDB() (*postgres.DB, error) {
 	ctx := context.Background()
 
 	container, err := MustStartContainer(ctx)
 	if err != nil {
-		t.Fatalf("Failed Creating Test Container")
+		return nil, fmt.Errorf("Failed Creating Test Container: %w", err)
 	}
 
 	connStr, err := container.ConnectionString(ctx, "sslmode=disable")
 	if err != nil {
-		t.Fatalf("Failed Getting Connection String")
+		return nil, fmt.Errorf("Failed Getting Connection String: %w", err)
 	}
 	db := postgres.NewDB(connStr)
-	db.Now = func() time.Time {
-		return time.Date(2024, time.February, 1, 12, 01, 03, 0, time.UTC)
-	}
 
 	if err := db.Open(); err != nil {
-		t.Fatalf("Failed To Open DB %s", err)
+		return nil, fmt.Errorf("Failed To Open DB %s", err)
 	}
 
-	return db, func() {
-		container.Terminate(ctx)
-		db.Close()
-	}
+	return db, nil
 }

@@ -19,7 +19,7 @@ func NewEntryService(db *DB) *EntryService {
 }
 
 func (es *EntryService) CreateEntry(ctx context.Context, entry *ledger.Entry) error {
-	tx, err := es.db.BeginTx(ctx)
+	tx, err := es.db.Begin(ctx)
 	if err != nil {
 		return err
 	}

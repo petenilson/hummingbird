@@ -18,7 +18,7 @@ func NewTransactionService(db *DB) *TransactionService {
 }
 
 func (ts *TransactionService) CreateTransaction(ctx context.Context, transaction *ledger.Transaction) error {
-	tx, err := ts.db.BeginTx(ctx)
+	tx, err := ts.db.Begin(ctx)
 	if err != nil {
 		return err
 	}
@@ -49,7 +49,7 @@ func (ts *TransactionService) CreateTransaction(ctx context.Context, transaction
 }
 
 func (ts *TransactionService) FindTransactionById(ctx context.Context, id int) (*ledger.Transaction, error) {
-	tx, err := ts.db.BeginTx(ctx)
+	tx, err := ts.db.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
