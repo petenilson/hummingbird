@@ -48,4 +48,13 @@ func TestAccounts(t *testing.T) {
 		}
 	},
 	)
+
+	t.Run("Test can create account.", func(t *testing.T) {
+
+		err := test_client.CreateAccount(context.Background(), account)
+		if err != nil {
+			t.Error(err)
+		}
+	},
+	)
 }

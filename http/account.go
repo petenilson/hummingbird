@@ -59,12 +59,16 @@ type AccountService struct {
 func NewAccountService(client *Client) *AccountService {
 	return &AccountService{Client: client}
 }
-func (s *AccountService) CreateAccount(ctx context.Context, account *ledger.Account) error {
+func (as *AccountService) CreateAccount(ctx context.Context, account *ledger.Account) error {
 	body, err := json.Marshal(account)
 	if err != nil {
 		return err
 	}
-	req, err := s.Client.newRequest("POST", "/accounts", bytes.NewReader(body))
+
+	req, err := as.Client.newRequest("POST", "/accounts", bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -75,8 +79,8 @@ func (s *AccountService) CreateAccount(ctx context.Context, account *ledger.Acco
 	return nil
 }
 
-func (s *AccountService) FindAccountByID(ctx context.Context, id int) (*ledger.Account, error) {
-	req, err := s.Client.newRequest("GET", fmt.Sprintf("/accounts/%d", id), nil)
+func (as *AccountService) FindAccountByID(ctx context.Context, id int) (*ledger.Account, error) {
+	req, err := as.Client.newRequest("GET", fmt.Sprintf("/accounts/%d", id), nil)
 	if err != nil {
 		return nil, err
 	}

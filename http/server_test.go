@@ -9,10 +9,13 @@ import (
 	"github.com/petenilson/go-ledger/mocks"
 )
 
+var TestAddress string = "http://localhost:8000"
+
 type TestServer struct {
 	*ledgerhttp.Server
 
-	AccountService mocks.AccountService
+	AccountService  mocks.AccountService
+	TransferService mocks.TransferService
 }
 
 func MustOpenServer(tb testing.TB) *TestServer {
@@ -21,6 +24,8 @@ func MustOpenServer(tb testing.TB) *TestServer {
 	s := &TestServer{Server: ledgerhttp.NewServer()}
 
 	s.Server.AccountService = &s.AccountService
+	s.Server.TransferService = &s.TransferService
+
 	s.Server.Address = "localhost:8000"
 
 	if err := s.Open(); err != nil {

@@ -18,7 +18,8 @@ type Server struct {
 
 	Address string
 
-	AccountService ledger.AccountService
+	AccountService  ledger.AccountService
+	TransferService ledger.TransferService
 }
 
 func NewServer() *Server {
@@ -26,13 +27,20 @@ func NewServer() *Server {
 		server: &http.Server{},
 		router: mux.NewRouter(),
 	}
+	// Set Not Found handler
+	s.router.NotFoundHandler = http.HandlerFunc(handleNotFound)
 	// Use middleware to set the default Content-type for all responses.
 	s.router.Use(defaultContentTypeMiddleware)
 	// Register routes here.
-	s.router.NotFoundHandler = http.HandlerFunc(handleNotFound)
+
+	// Accounts
 	s.router.HandleFunc("/accounts/{id}", s.handleGetAccountById).Methods("GET")
 	s.router.HandleFunc("/accounts", s.handleCreateAccount).Methods("POST")
 
+	// Transfers
+	s.router.HandleFunc("/transfers", s.handleCreateTransfer).Methods("POST")
+
+	// Finally use the mux routers as the handler.
 	s.server.Handler = s.router
 	return s
 }
