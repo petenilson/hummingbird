@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 	"time"
@@ -22,17 +23,19 @@ type Server struct {
 	TransferService ledger.TransferService
 }
 
-func NewServer() *Server {
+func NewServer(address string) *Server {
 	s := &Server{
-		server: &http.Server{},
-		router: mux.NewRouter(),
+		server:  &http.Server{Addr: address},
+		router:  mux.NewRouter(),
+		Address: address,
 	}
 	// Set Not Found handler
 	s.router.NotFoundHandler = http.HandlerFunc(handleNotFound)
+
 	// Use middleware to set the default Content-type for all responses.
 	s.router.Use(defaultContentTypeMiddleware)
-	// Register routes here.
 
+	// Register routes here.
 	// Accounts
 	s.router.HandleFunc("/accounts/{id}", s.handleGetAccountById).Methods("GET")
 	s.router.HandleFunc("/accounts", s.handleCreateAccount).Methods("POST")
@@ -40,8 +43,9 @@ func NewServer() *Server {
 	// Transfers
 	s.router.HandleFunc("/transfers", s.handleCreateTransfer).Methods("POST")
 
-	// Finally use the mux routers as the handler.
+	// Use the mux router as the handler.
 	s.server.Handler = s.router
+
 	return s
 }
 
@@ -60,6 +64,10 @@ func (s *Server) Close() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	return s.server.Shutdown(ctx)
+}
+
+func (s *Server) URL() string {
+	return fmt.Sprintf("http://%s", s.Address)
 }
 
 func handleNotFound(w http.ResponseWriter, r *http.Request) {

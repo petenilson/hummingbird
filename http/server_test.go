@@ -21,12 +21,10 @@ type TestServer struct {
 func MustOpenServer(tb testing.TB) *TestServer {
 	tb.Helper()
 
-	s := &TestServer{Server: ledgerhttp.NewServer()}
+	s := &TestServer{Server: ledgerhttp.NewServer("localhost:8000")}
 
 	s.Server.AccountService = &s.AccountService
 	s.Server.TransferService = &s.TransferService
-
-	s.Server.Address = "localhost:8000"
 
 	if err := s.Open(); err != nil {
 		tb.Fatal(err)

@@ -76,6 +76,11 @@ func (as *AccountService) CreateAccount(ctx context.Context, account *ledger.Acc
 	} else if resp.StatusCode != http.StatusCreated {
 		return parseResponseError(resp)
 	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&account); err != nil {
+		return err
+	}
+
 	return nil
 }
 

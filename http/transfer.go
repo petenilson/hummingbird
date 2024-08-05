@@ -49,9 +49,14 @@ func (ts *TransferService) CreateTransfer(
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil
+		return err
 	} else if resp.StatusCode != http.StatusCreated {
 		return parseResponseError(resp)
 	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&transfer); err != nil {
+		return err
+	}
+
 	return nil
 }

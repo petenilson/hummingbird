@@ -31,6 +31,11 @@ func (c *Client) newRequest(method, url string, body io.Reader) (*http.Request, 
 
 func Error(w http.ResponseWriter, r *http.Request, e error) {
 	code, message := ledger.ErrorCode(e), ledger.ErrorMessage(e)
+
+	if code == ledger.EINTERNAL {
+		LogError(r, e)
+	}
+
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(ErrorStatusCode(code))
 	json.NewEncoder(w).Encode(&ErrorResponse{Error: message})
