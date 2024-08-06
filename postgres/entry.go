@@ -8,6 +8,8 @@ import (
 	"github.com/petenilson/go-ledger"
 )
 
+var _ ledger.EntryService = (*EntryService)(nil)
+
 type EntryService struct {
 	db *DB
 }
@@ -18,6 +20,19 @@ func NewEntryService(db *DB) *EntryService {
 	}
 }
 
+// FindEntrys implements ledger.EntryService.
+func (es *EntryService) FindEntrys(
+	ctx context.Context, filter ledger.EntryFilter,
+) ([]*ledger.Entry, int, error) {
+	tx, err := es.db.Begin(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer tx.Rollback(ctx)
+	return findEntrys(ctx, tx, &filter)
+}
+
+// CreateEntry implements ledger.EntryService.
 func (es *EntryService) CreateEntry(ctx context.Context, entry *ledger.Entry) error {
 	tx, err := es.db.Begin(ctx)
 	if err != nil {

@@ -1,18 +1,20 @@
 package ledger
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
-// InterAccountTransfer represents a movement of funds with exactly one
-// Transction associated with it.
+// InterAccountTransfer represents a movement of funds between two accounts.
 type InterAccountTransfer struct {
-	ID            int
-	Description   string
-	ToAccountID   int
-	FromAccountID int
-	Amount        int
-	CreatedAt     time.Time
-	Transaction   *Transaction
-	TransactionID int
+	ID            int          `json:"id"`
+	Description   string       `json:"description"`
+	ToAccountID   int          `json:"to_account_id"`
+	FromAccountID int          `json:"from_account_id"`
+	Amount        int          `json:"amount"`
+	CreatedAt     time.Time    `json:"created_at"`
+	Transaction   *Transaction `json:"transaction"`
+	TransactionID int          `json:"transaction_id"`
 }
 
 func NewTransfer(
@@ -45,4 +47,8 @@ func NewTransfer(
 
 type TransferFilter struct {
 	ID *int
+}
+
+type TransferService interface {
+	CreateTransfer(context.Context, *InterAccountTransfer) error
 }

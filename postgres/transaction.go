@@ -28,7 +28,7 @@ func (ts *TransactionService) CreateTransaction(ctx context.Context, transaction
 		return err
 	}
 
-	// TODO: This is slow. Bulk insert the entries and transaction entrys here
+	// TODO: This is slow. Bulk insert the entrys and transaction-entrys here
 	for _, v := range transaction.Entrys {
 		if err := createEntry(ctx, tx, v); err != nil {
 			return err

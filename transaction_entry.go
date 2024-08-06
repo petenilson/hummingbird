@@ -10,5 +10,7 @@ type TransactionEntry struct {
 }
 
 type TransactionEntryFilter struct {
-	TransactionID int
+	TransactionEntryID int
+	TransactionID      int
+	EntryID            int
 }

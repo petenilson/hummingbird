@@ -9,6 +9,8 @@ import (
 	"github.com/petenilson/go-ledger"
 )
 
+var _ ledger.AccountService = (*AccountService)(nil)
+
 type AccountService struct {
 	db *DB
 }
@@ -19,6 +21,22 @@ func NewAccountService(db *DB) *AccountService {
 	}
 }
 
+// UpdateAccount implements ledger.AccountService.
+func (as *AccountService) UpdateAccount(
+	ctx context.Context, account_id int, update *ledger.AccountUpdate,
+) error {
+	tx, err := as.db.Begin(ctx)
+	defer tx.Rollback(ctx)
+	if err != nil {
+		return err
+	}
+	if err := updateAccount(ctx, tx, account_id, update); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+// CreateAccount implements ledger.AccountService.
 func (as *AccountService) CreateAccount(
 	ctx context.Context,
 	account *ledger.Account,
@@ -34,6 +52,7 @@ func (as *AccountService) CreateAccount(
 	return tx.Commit(ctx)
 }
 
+// FindAccountByID implements ledger.AccountService.
 func (as *AccountService) FindAccountByID(
 	ctx context.Context, account_id int,
 ) (*ledger.Account, error) {
@@ -139,30 +158,6 @@ func createAccount(ctx context.Context, tx *Tx, account *ledger.Account) error {
 	return nil
 }
 
-func lockAccountRows(ctx context.Context, tx *Tx, account_ids []int) error {
-
-	ids := make([]string, len(account_ids))
-	args := make([]interface{}, len(account_ids))
-	for i, id := range account_ids {
-		ids[i] = fmt.Sprintf("$%d", i+1)
-		args[i] = id
-	}
-
-	if _, err := tx.Exec(
-		ctx,
-		fmt.Sprintf(
-			`SELECT *
-			FROM accounts
-			WHERE id IN (%s)
-			FOR UPDATE`,
-			strings.Join(ids, ", "),
-		),
-		args...); err != nil {
-		return err
-	}
-	return nil
-}
-
 func updateAccount(
 	ctx context.Context,
 	tx *Tx,
@@ -179,6 +174,30 @@ func updateAccount(
 		update.Delta,
 		(*NullTime)(&tx.asof),
 		id,
+	); err != nil {
+		return err
+	}
+	return nil
+}
+
+func lockAccountRows(ctx context.Context, tx *Tx, account_ids []int) error {
+	ids := make([]string, len(account_ids))
+	args := make([]interface{}, len(account_ids))
+	for i, id := range account_ids {
+		ids[i] = fmt.Sprintf("$%d", i+1)
+		args[i] = id
+	}
+
+	if _, err := tx.Exec(
+		ctx,
+		fmt.Sprintf(
+			`SELECT *
+			FROM accounts
+			WHERE id IN (%s)
+			FOR UPDATE`,
+			strings.Join(ids, ", "),
+		),
+		args...,
 	); err != nil {
 		return err
 	}

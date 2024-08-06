@@ -25,7 +25,7 @@ func (s *AccountService) FindAccountByID(ctx context.Context, id int) (*ledger.A
 
 // UpdateAccount implements ledger.AccountService.
 func (s *AccountService) UpdateAccount(
-	ctx context.Context, account *ledger.AccountUpdate,
-) (*ledger.Account, error) {
+	ctx context.Context, account_id int, update *ledger.AccountUpdate,
+) error {
 	panic("unimplemented")
 }

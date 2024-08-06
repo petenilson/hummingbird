@@ -21,7 +21,8 @@ func NewTransferService(db *DB) *TransferService {
 func (ts *TransferService) CreateTransfer(
 	ctx context.Context, transfer *ledger.InterAccountTransfer,
 ) error {
-	// Start Transaction
+
+	// Start DB Transaction
 	tx, err := ts.db.Begin(ctx)
 	if err != nil {
 		return err
@@ -36,6 +37,7 @@ func (ts *TransferService) CreateTransfer(
 	}
 
 	// Update accounts balance
+	// TODO: Make this a bulk update?
 	if err := updateAccount(
 		ctx,
 		tx,
@@ -59,8 +61,9 @@ func (ts *TransferService) CreateTransfer(
 	// Create a new transaction
 	if err := createTransaction(ctx, tx, transfer.Transaction); err != nil {
 		return err
+	} else {
+		transfer.TransactionID = transfer.Transaction.ID
 	}
-	transfer.TransactionID = transfer.Transaction.ID
 
 	// Create entries for transaction
 	for _, v := range transfer.Transaction.Entrys {
@@ -69,7 +72,18 @@ func (ts *TransferService) CreateTransfer(
 		}
 	}
 
-	// Create the transfer
+	// Create TransactionEntrys
+	for _, v := range transfer.Transaction.Entrys {
+		if err := createTransactionEntry(
+			ctx, tx, &ledger.TransactionEntry{
+				EntryID:       v.ID,
+				TransactionID: transfer.TransactionID,
+			}); err != nil {
+			return err
+		}
+	}
+
+	// Finally create the transfer
 	if err := createTransfer(ctx, tx, transfer); err != nil {
 		return err
 	}

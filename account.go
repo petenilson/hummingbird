@@ -30,6 +30,6 @@ type AccountUpdate struct {
 
 type AccountService interface {
 	CreateAccount(ctx context.Context, account *Account) error
-	UpdateAccount(ctx context.Context, account *AccountUpdate) (*Account, error)
+	UpdateAccount(ctx context.Context, id int, update *AccountUpdate) error
 	FindAccountByID(ctx context.Context, id int) (*Account, error)
 }

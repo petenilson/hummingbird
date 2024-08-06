@@ -16,10 +16,10 @@ CREATE TYPE entry_type AS ENUM ('DEBIT', 'CREDIT');
 
 CREATE TABLE entrys (
   id SERIAL PRIMARY KEY,
-  account_id INTEGER NOT NULL,
-  created_at TEXT NOT NULL,
   amount INTEGER NOT NULL,
+  account_id INTEGER NOT NULL,
   type entry_type NOT NULL,
+  created_at TEXT NOT NULL,
   CONSTRAINT fk_account FOREIGN KEY (account_id) REFERENCES accounts (id)
 );
 
@@ -42,7 +42,8 @@ CREATE TABLE transaction_entrys (
   transaction_id INTEGER NOT NULL,
   created_at TEXT NOT NULL,
   CONSTRAINT fk_entry FOREIGN KEY (entry_id) REFERENCES entrys (id),
-  CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES transactions (id)
+  CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES transactions (id),
+  CONSTRAINT unique_entry_transaction UNIQUE (entry_id, transaction_id)
 );
 
 CREATE INDEX idx_tx_entry_tx_id ON transaction_entrys (transaction_id);

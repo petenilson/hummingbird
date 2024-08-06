@@ -1,6 +1,9 @@
 package ledger
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 type EntryType string
 
@@ -19,4 +22,9 @@ type Entry struct {
 
 type EntryFilter struct {
 	AccountID *int
+}
+
+type EntryService interface {
+	FindEntrys(context.Context, EntryFilter) ([]*Entry, int, error)
+	CreateEntry(context.Context, *Entry) error
 }

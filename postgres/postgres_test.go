@@ -1,7 +1,6 @@
 package postgres_test
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -19,8 +18,7 @@ import (
 var DB *postgres.DB
 
 func TestMain(m *testing.M) {
-	// Setup code...
-	db, err := MustReturnTestDB()
+	db, err := MustOpenTestDB(m)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -31,24 +29,24 @@ func TestMain(m *testing.M) {
 
 	exit_code := m.Run()
 
-	// Teardown code...
 	db.Close()
 	os.Exit(exit_code)
 }
 
-// TestDB allows us to define at test time what will be returned
-// when Begin is called on the DB. Our goal is to have begin return
-// an inner pseudo transaction that can be reverted after every
-// test function.
-type TestDB struct {
-	db      *postgres.DB
-	BeginFn func(context.Context) (*postgres.Tx, error)
-	outerTx *postgres.Tx
-	Now     func() time.Time
+func NewTestDB(tb testing.TB) *postgres.DB {
+	tb.Helper()
+	container := MustCreateContainer(tb)
+	dsn, err := container.ConnectionString(context.Background(), "sslmode=disable")
+	if err != nil {
+		tb.Fatal(err)
+	}
+	return postgres.NewDB(dsn)
 }
 
-func MustStartContainer(ctx context.Context) (*container_postgres.PostgresContainer, error) {
-	if postgresContainer, err := container_postgres.Run(ctx,
+func MustCreateContainer(tb testing.TB) *container_postgres.PostgresContainer {
+	tb.Helper()
+	container, err := container_postgres.Run(
+		context.Background(),
 		"docker.io/postgres:16-alpine",
 		container_postgres.WithDatabase("TestDB"),
 		container_postgres.WithUsername("TestUser"),
@@ -57,30 +55,26 @@ func MustStartContainer(ctx context.Context) (*container_postgres.PostgresContai
 			wait.ForLog("database system is ready to accept connections").
 				WithOccurrence(2).
 				WithStartupTimeout(5*time.Second)),
-	); err != nil {
-		return nil, err
-	} else {
-		return postgresContainer, nil
+	)
+	if err != nil {
+		tb.Fatal(err)
 	}
+	return container
 }
 
-func MustReturnTestDB() (*postgres.DB, error) {
+func MustOpenTestDB(tb testing.TB) *postgres.DB {
+	tb.Helper()
 	ctx := context.Background()
 
-	container, err := MustStartContainer(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("Failed Creating Test Container: %w", err)
-	}
-
+	container := MustCreateContainer(tb)
 	connStr, err := container.ConnectionString(ctx, "sslmode=disable")
 	if err != nil {
-		return nil, fmt.Errorf("Failed Getting Connection String: %w", err)
+		tb.Fatal(err)
 	}
 	db := postgres.NewDB(connStr)
 
 	if err := db.Open(); err != nil {
-		return nil, fmt.Errorf("Failed To Open DB %s", err)
+		tb.Fatal(err)
 	}
-
-	return db, nil
+	return db
 }
