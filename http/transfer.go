@@ -4,19 +4,27 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/petenilson/go-ledger"
 )
 
 func (s *Server) handleCreateTransfer(w http.ResponseWriter, r *http.Request) {
-	var transfer ledger.InterAccountTransfer
-	if err := json.NewDecoder(r.Body).Decode(&transfer); err != nil {
+	var body struct {
+		ToAccountID   int `json:"to_account_id"`
+		FromAccountID int `json:"from_account_id"`
+		Amount        int `json:"amount"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		fmt.Println(err)
 		Error(w, r, &ledger.Error{Code: ledger.EINVALID, Message: "Invalid JSON"})
 		return
 	}
 
-	err := s.TransferService.CreateTransfer(r.Context(), &transfer)
+	transfer := ledger.NewTransfer(body.FromAccountID, body.ToAccountID, body.Amount, "")
+
+	err := s.TransferService.CreateTransfer(r.Context(), transfer)
 	if err != nil {
 		Error(w, r, err)
 		return
@@ -30,10 +38,10 @@ func (s *Server) handleCreateTransfer(w http.ResponseWriter, r *http.Request) {
 }
 
 type TransferService struct {
-	Client *Client
+	Client *HTTPClient
 }
 
-func (ts *TransferService) CreateTransfer(
+func (c *LedgerClient) CreateTransfer(
 	ctx context.Context,
 	transfer *ledger.InterAccountTransfer,
 ) error {
@@ -42,7 +50,7 @@ func (ts *TransferService) CreateTransfer(
 		return err
 	}
 
-	req, err := ts.Client.newRequest("POST", "/transfers", bytes.NewReader(body))
+	req, err := c.HTTPClient.newRequest("POST", "/transfers", bytes.NewReader(body))
 	if err != nil {
 		return err
 	}

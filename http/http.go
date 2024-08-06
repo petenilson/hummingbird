@@ -9,15 +9,20 @@ import (
 	"github.com/petenilson/go-ledger"
 )
 
-type Client struct {
+// Ledger Client Provides an API for the Ledger over HTTP.
+type LedgerClient struct {
+	HTTPClient *HTTPClient
+}
+
+type HTTPClient struct {
 	URL string
 }
 
-func NewClient(u string) *Client {
-	return &Client{URL: u}
+func NewClient(u string) *HTTPClient {
+	return &HTTPClient{URL: u}
 }
 
-func (c *Client) newRequest(method, url string, body io.Reader) (*http.Request, error) {
+func (c *HTTPClient) newRequest(method, url string, body io.Reader) (*http.Request, error) {
 	req, err := http.NewRequest(method, c.URL+url, body)
 	if err != nil {
 		return nil, err

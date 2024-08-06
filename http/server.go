@@ -19,6 +19,7 @@ type Server struct {
 
 	Address string
 
+	EntryService    ledger.EntryService
 	AccountService  ledger.AccountService
 	TransferService ledger.TransferService
 }
@@ -35,13 +36,15 @@ func NewServer(address string) *Server {
 	// Use middleware to set the default Content-type for all responses.
 	s.router.Use(defaultContentTypeMiddleware)
 
-	// Register routes here.
-	// Accounts
+	// Register Account Routes
 	s.router.HandleFunc("/accounts/{id}", s.handleGetAccountById).Methods("GET")
 	s.router.HandleFunc("/accounts", s.handleCreateAccount).Methods("POST")
 
-	// Transfers
+	// Register Transfer Routes
 	s.router.HandleFunc("/transfers", s.handleCreateTransfer).Methods("POST")
+
+	// Register Entry Routes
+	s.router.HandleFunc("/entrys", s.handleListEntrys).Methods("GET")
 
 	// Use the mux router as the handler.
 	s.server.Handler = s.router

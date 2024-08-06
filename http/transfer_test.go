@@ -12,8 +12,8 @@ func TestCreateTransfer(t *testing.T) {
 	s := MustOpenServer(t)
 	defer MustCloseServer(t, s)
 
-	test_client := http.TransferService{
-		Client: &http.Client{TestAddress},
+	test_client := http.LedgerClient{
+		HTTPClient: &http.HTTPClient{TestAddress},
 	}
 
 	s.TransferService.CreateTransferFn = func(context.Context, *ledger.InterAccountTransfer) error { return nil }

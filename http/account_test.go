@@ -13,8 +13,8 @@ func TestAccounts(t *testing.T) {
 	s := MustOpenServer(t)
 	defer MustCloseServer(t, s)
 
-	test_client := http.AccountService{
-		Client: &http.Client{"http://localhost:8000"},
+	test_client := http.LedgerClient{
+		HTTPClient: &http.HTTPClient{"http://localhost:8000"},
 	}
 
 	account := &ledger.Account{
