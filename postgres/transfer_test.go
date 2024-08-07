@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/petenilson/go-ledger"
-	"github.com/petenilson/go-ledger/postgres"
+	"github.com/petenilson/hummingbird"
+	"github.com/petenilson/hummingbird/postgres"
 )
 
 func TestTransactionService_CreateTransfer(t *testing.T) {
@@ -15,15 +15,15 @@ func TestTransactionService_CreateTransfer(t *testing.T) {
 		ts := postgres.NewTransferService(DB)
 		as := postgres.NewAccountService(DB)
 
-		to_account := &ledger.Account{Name: "To Account"}
-		from_account := &ledger.Account{Name: "From Account"}
+		to_account := &hummingbird.Account{Name: "To Account"}
+		from_account := &hummingbird.Account{Name: "From Account"}
 		if err := as.CreateAccount(cx, to_account); err != nil {
 			t.Fatal(err)
 		} else if err := as.CreateAccount(cx, from_account); err != nil {
 			t.Fatal(err)
 		}
 
-		transfer := ledger.NewTransfer(
+		transfer := hummingbird.NewTransfer(
 			from_account.ID,
 			to_account.ID,
 			100,
@@ -38,7 +38,7 @@ func TestTransactionService_CreateTransfer(t *testing.T) {
 			t.Fatal(err)
 		}
 		// Not testing for attached Transactions yet.
-		want := &ledger.InterAccountTransfer{
+		want := &hummingbird.InterAccountTransfer{
 			ID:            transfer.ID,
 			Description:   "Test Transfer",
 			FromAccountID: from_account.ID,

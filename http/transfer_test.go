@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/petenilson/go-ledger"
-	"github.com/petenilson/go-ledger/http"
+	"github.com/petenilson/hummingbird"
+	"github.com/petenilson/hummingbird/http"
 )
 
 func TestCreateTransfer(t *testing.T) {
@@ -16,9 +16,9 @@ func TestCreateTransfer(t *testing.T) {
 		HTTPClient: &http.HTTPClient{TestAddress},
 	}
 
-	s.TransferService.CreateTransferFn = func(context.Context, *ledger.InterAccountTransfer) error { return nil }
+	s.TransferService.CreateTransferFn = func(context.Context, *hummingbird.InterAccountTransfer) error { return nil }
 
-	transfer := ledger.NewTransfer(1234, 5678, 10_000, "Testing")
+	transfer := hummingbird.NewTransfer(1234, 5678, 10_000, "Testing")
 
 	err := test_client.CreateTransfer(context.Background(), transfer)
 	if err != nil {

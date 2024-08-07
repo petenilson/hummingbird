@@ -4,27 +4,19 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
-	"github.com/petenilson/go-ledger"
+	"github.com/petenilson/hummingbird"
 )
 
 func (s *Server) handleCreateTransfer(w http.ResponseWriter, r *http.Request) {
-	var body struct {
-		ToAccountID   int `json:"to_account_id"`
-		FromAccountID int `json:"from_account_id"`
-		Amount        int `json:"amount"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		fmt.Println(err)
-		Error(w, r, &ledger.Error{Code: ledger.EINVALID, Message: "Invalid JSON"})
+	var transfer hummingbird.InterAccountTransfer
+	if err := json.NewDecoder(r.Body).Decode(&transfer); err != nil {
+		Error(w, r, &hummingbird.Error{Code: hummingbird.EINVALID, Message: "Invalid JSON"})
 		return
 	}
 
-	transfer := ledger.NewTransfer(body.FromAccountID, body.ToAccountID, body.Amount, "")
-
-	err := s.TransferService.CreateTransfer(r.Context(), transfer)
+	err := s.TransferService.CreateTransfer(r.Context(), &transfer)
 	if err != nil {
 		Error(w, r, err)
 		return
@@ -43,7 +35,7 @@ type TransferService struct {
 
 func (c *LedgerClient) CreateTransfer(
 	ctx context.Context,
-	transfer *ledger.InterAccountTransfer,
+	transfer *hummingbird.InterAccountTransfer,
 ) error {
 	body, err := json.Marshal(transfer)
 	if err != nil {

@@ -1,4 +1,4 @@
-module github.com/petenilson/go-ledger
+module github.com/petenilson/hummingbird
 
 go 1.22.5
 

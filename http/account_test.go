@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/petenilson/go-ledger"
-	"github.com/petenilson/go-ledger/http"
+	"github.com/petenilson/hummingbird"
+	"github.com/petenilson/hummingbird/http"
 )
 
 func TestAccounts(t *testing.T) {
@@ -17,17 +17,17 @@ func TestAccounts(t *testing.T) {
 		HTTPClient: &http.HTTPClient{"http://localhost:8000"},
 	}
 
-	account := &ledger.Account{
+	account := &hummingbird.Account{
 		ID:        999,
 		Balance:   10_000,
 		Name:      "Peter's Account",
 		CreatedAt: time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC),
 		UpdatedAt: time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC),
 	}
-	s.AccountService.FindAccountByIDFn = func(context.Context, int) (*ledger.Account, error) {
+	s.AccountService.FindAccountByIDFn = func(context.Context, int) (*hummingbird.Account, error) {
 		return account, nil
 	}
-	s.AccountService.CreateAccountFn = func(context.Context, *ledger.Account) error {
+	s.AccountService.CreateAccountFn = func(context.Context, *hummingbird.Account) error {
 		return nil
 	}
 

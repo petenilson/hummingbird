@@ -8,7 +8,7 @@ import (
 
 	"context"
 
-	"github.com/petenilson/go-ledger/postgres"
+	"github.com/petenilson/hummingbird/postgres"
 
 	"github.com/testcontainers/testcontainers-go"
 	container_postgres "github.com/testcontainers/testcontainers-go/modules/postgres"

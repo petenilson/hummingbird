@@ -3,7 +3,7 @@ package postgres
 import (
 	"context"
 
-	"github.com/petenilson/go-ledger"
+	"github.com/petenilson/hummingbird"
 )
 
 type TransactionEntryService struct {
@@ -16,11 +16,11 @@ func NewTransactionEntryService(db *DB) *TransactionEntryService {
 	}
 }
 
-// FindEntryByTransactionID retreives entries in the context of a ledger.Transction
+// FindEntryByTransactionID retreives entries in the context of a hummingbird.Transction
 // and performs the lookup through the TransactionEntry table.
 func (tas *TransactionEntryService) FindEntrsyByTransactionID(
 	ctx context.Context, transaction_id int,
-) ([]*ledger.Entry, int, error) {
+) ([]*hummingbird.Entry, int, error) {
 	tx, err := tas.db.Begin(ctx)
 	if err != nil {
 		return nil, 0, err
@@ -32,7 +32,7 @@ func (tas *TransactionEntryService) FindEntrsyByTransactionID(
 func createTransactionEntry(
 	ctx context.Context,
 	tx *Tx,
-	transaction_entry *ledger.TransactionEntry,
+	transaction_entry *hummingbird.TransactionEntry,
 ) error {
 	transaction_entry.CreatedAt = tx.asof
 	// Insert row into database.
@@ -57,7 +57,7 @@ func createTransactionEntry(
 
 func findEntriesByTransactionID(
 	ctx context.Context, tx *Tx, transaction_id int,
-) ([]*ledger.Entry, int, error) {
+) ([]*hummingbird.Entry, int, error) {
 	rows, err := tx.Query(ctx, `
 		SELECT 
       e.id,
@@ -78,11 +78,11 @@ func findEntriesByTransactionID(
 	}
 	defer rows.Close()
 
-	entrys := make([]*ledger.Entry, 0)
+	entrys := make([]*hummingbird.Entry, 0)
 	entry_count := 0
 
 	for rows.Next() {
-		var entry ledger.Entry
+		var entry hummingbird.Entry
 		if err := rows.Scan(
 			&entry.ID,
 			&entry.AccountID,

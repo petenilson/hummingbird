@@ -9,13 +9,13 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/petenilson/go-ledger"
+	"github.com/petenilson/hummingbird"
 )
 
 func (s *Server) handleGetAccountById(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
-		Error(w, r, &ledger.Error{Code: ledger.EINVALID, Message: "Invalid Account ID"})
+		Error(w, r, &hummingbird.Error{Code: hummingbird.EINVALID, Message: "Invalid Account ID"})
 		return
 	}
 
@@ -33,9 +33,9 @@ func (s *Server) handleGetAccountById(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleCreateAccount(w http.ResponseWriter, r *http.Request) {
-	var account ledger.Account
+	var account hummingbird.Account
 	if err := json.NewDecoder(r.Body).Decode(&account); err != nil {
-		Error(w, r, &ledger.Error{Code: ledger.EINVALID, Message: "Invalid JSON"})
+		Error(w, r, &hummingbird.Error{Code: hummingbird.EINVALID, Message: "Invalid JSON"})
 		return
 	}
 
@@ -60,7 +60,7 @@ func NewAccountService(client *HTTPClient) *AccountService {
 	return &AccountService{Client: client}
 }
 
-func (c *LedgerClient) CreateAccount(ctx context.Context, account *ledger.Account) error {
+func (c *LedgerClient) CreateAccount(ctx context.Context, account *hummingbird.Account) error {
 	body, err := json.Marshal(account)
 	if err != nil {
 		return err
@@ -85,7 +85,7 @@ func (c *LedgerClient) CreateAccount(ctx context.Context, account *ledger.Accoun
 	return nil
 }
 
-func (c *LedgerClient) FindAccountByID(ctx context.Context, id int) (*ledger.Account, error) {
+func (c *LedgerClient) FindAccountByID(ctx context.Context, id int) (*hummingbird.Account, error) {
 	req, err := c.HTTPClient.newRequest("GET", fmt.Sprintf("/accounts/%d", id), nil)
 	if err != nil {
 		return nil, err
@@ -98,7 +98,7 @@ func (c *LedgerClient) FindAccountByID(ctx context.Context, id int) (*ledger.Acc
 		return nil, parseResponseError(resp)
 	}
 
-	var account ledger.Account
+	var account hummingbird.Account
 	defer resp.Body.Close()
 	if err := json.NewDecoder(resp.Body).Decode(&account); err != nil {
 		return nil, err

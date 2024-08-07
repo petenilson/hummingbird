@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/petenilson/go-ledger"
+	"github.com/petenilson/hummingbird"
 )
 
-var _ ledger.EntryService = (*EntryService)(nil)
+var _ hummingbird.EntryService = (*EntryService)(nil)
 
 type EntryService struct {
 	db *DB
@@ -20,10 +20,10 @@ func NewEntryService(db *DB) *EntryService {
 	}
 }
 
-// FindEntrys implements ledger.EntryService.
+// FindEntrys implements hummingbird.EntryService.
 func (es *EntryService) FindEntrys(
-	ctx context.Context, filter ledger.EntryFilter,
-) ([]*ledger.Entry, int, error) {
+	ctx context.Context, filter hummingbird.EntryFilter,
+) ([]*hummingbird.Entry, int, error) {
 	tx, err := es.db.Begin(ctx)
 	if err != nil {
 		return nil, 0, err
@@ -32,8 +32,8 @@ func (es *EntryService) FindEntrys(
 	return findEntrys(ctx, tx, &filter)
 }
 
-// CreateEntry implements ledger.EntryService.
-func (es *EntryService) CreateEntry(ctx context.Context, entry *ledger.Entry) error {
+// CreateEntry implements hummingbird.EntryService.
+func (es *EntryService) CreateEntry(ctx context.Context, entry *hummingbird.Entry) error {
 	tx, err := es.db.Begin(ctx)
 	if err != nil {
 		return err
@@ -45,7 +45,7 @@ func (es *EntryService) CreateEntry(ctx context.Context, entry *ledger.Entry) er
 	return tx.Commit(ctx)
 }
 
-func createEntry(ctx context.Context, tx *Tx, entry *ledger.Entry) error {
+func createEntry(ctx context.Context, tx *Tx, entry *hummingbird.Entry) error {
 	entry.CreatedAt = tx.asof
 	// Insert row into database.
 	err := tx.QueryRow(ctx, `
@@ -70,9 +70,9 @@ func createEntry(ctx context.Context, tx *Tx, entry *ledger.Entry) error {
 }
 
 // attachEntrys get's the entries associated with the transaction
-// from the DB and adds them to the ledger.Transaction instance.
+// from the DB and adds them to the hummingbird.Transaction instance.
 func attachEntrys(
-	ctx context.Context, tx *Tx, transaction *ledger.Transaction,
+	ctx context.Context, tx *Tx, transaction *hummingbird.Transaction,
 ) error {
 	if entries, _, err := findEntriesByTransactionID(
 		ctx,
@@ -88,8 +88,8 @@ func attachEntrys(
 }
 
 func findEntrys(
-	ctx context.Context, tx *Tx, filter *ledger.EntryFilter,
-) ([]*ledger.Entry, int, error) {
+	ctx context.Context, tx *Tx, filter *hummingbird.EntryFilter,
+) ([]*hummingbird.Entry, int, error) {
 	where, args := []string{"1 = 1"}, []interface{}{}
 	if v := filter.AccountID; v != nil {
 		where, args = append(where, "account_id = $1"), append(args, *v)
@@ -112,10 +112,10 @@ func findEntrys(
 		return nil, 0, err
 	}
 	defer rows.Close()
-	entrys := make([]*ledger.Entry, 0)
+	entrys := make([]*hummingbird.Entry, 0)
 	var entry_count int
 	for rows.Next() {
-		var entry ledger.Entry
+		var entry hummingbird.Entry
 		if err := rows.Scan(
 			&entry.ID,
 			&entry.AccountID,

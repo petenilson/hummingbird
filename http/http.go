@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/petenilson/go-ledger"
+	"github.com/petenilson/hummingbird"
 )
 
 // Ledger Client Provides an API for the Ledger over HTTP.
@@ -35,9 +35,9 @@ func (c *HTTPClient) newRequest(method, url string, body io.Reader) (*http.Reque
 }
 
 func Error(w http.ResponseWriter, r *http.Request, e error) {
-	code, message := ledger.ErrorCode(e), ledger.ErrorMessage(e)
+	code, message := hummingbird.ErrorCode(e), hummingbird.ErrorMessage(e)
 
-	if code == ledger.EINTERNAL {
+	if code == hummingbird.EINTERNAL {
 		LogError(r, e)
 	}
 
@@ -63,7 +63,7 @@ func parseResponseError(resp *http.Response) error {
 		return err
 	}
 
-	return &ledger.Error{
+	return &hummingbird.Error{
 		Message: errorResponse.Error,
 		Code:    FromErrorStatusCode(resp.StatusCode),
 	}
@@ -74,12 +74,12 @@ func LogError(r *http.Request, err error) {
 }
 
 var codes = map[string]int{
-	ledger.ECONFLICT:       http.StatusConflict,
-	ledger.EINVALID:        http.StatusBadRequest,
-	ledger.ENOTFOUND:       http.StatusNotFound,
-	ledger.ENOTIMPLEMENTED: http.StatusNotImplemented,
-	ledger.EUNAUTHORIZED:   http.StatusUnauthorized,
-	ledger.EINTERNAL:       http.StatusInternalServerError,
+	hummingbird.ECONFLICT:       http.StatusConflict,
+	hummingbird.EINVALID:        http.StatusBadRequest,
+	hummingbird.ENOTFOUND:       http.StatusNotFound,
+	hummingbird.ENOTIMPLEMENTED: http.StatusNotImplemented,
+	hummingbird.EUNAUTHORIZED:   http.StatusUnauthorized,
+	hummingbird.EINTERNAL:       http.StatusInternalServerError,
 }
 
 func ErrorStatusCode(code string) int {
@@ -95,5 +95,5 @@ func FromErrorStatusCode(code int) string {
 			return k
 		}
 	}
-	return ledger.EINTERNAL
+	return hummingbird.EINTERNAL
 }

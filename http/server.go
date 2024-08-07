@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/petenilson/go-ledger"
+	"github.com/petenilson/hummingbird"
 )
 
 type Server struct {
@@ -19,9 +19,9 @@ type Server struct {
 
 	Address string
 
-	EntryService    ledger.EntryService
-	AccountService  ledger.AccountService
-	TransferService ledger.TransferService
+	EntryService    hummingbird.EntryService
+	AccountService  hummingbird.AccountService
+	TransferService hummingbird.TransferService
 }
 
 func NewServer(address string) *Server {

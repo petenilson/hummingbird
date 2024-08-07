@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"testing"
 
-	ledgerhttp "github.com/petenilson/go-ledger/http"
-	"github.com/petenilson/go-ledger/mocks"
+	hbhttp "github.com/petenilson/hummingbird/http"
+	"github.com/petenilson/hummingbird/mocks"
 )
 
 var TestAddress string = "http://localhost:8000"
 
 type TestServer struct {
-	*ledgerhttp.Server
+	*hbhttp.Server
 
 	AccountService  mocks.AccountService
 	TransferService mocks.TransferService
@@ -21,7 +21,7 @@ type TestServer struct {
 func MustOpenServer(tb testing.TB) *TestServer {
 	tb.Helper()
 
-	s := &TestServer{Server: ledgerhttp.NewServer("localhost:8000")}
+	s := &TestServer{Server: hbhttp.NewServer("localhost:8000")}
 
 	s.Server.AccountService = &s.AccountService
 	s.Server.TransferService = &s.TransferService

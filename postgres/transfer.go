@@ -5,7 +5,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/petenilson/go-ledger"
+	"github.com/petenilson/hummingbird"
 )
 
 type TransferService struct {
@@ -19,7 +19,7 @@ func NewTransferService(db *DB) *TransferService {
 }
 
 func (ts *TransferService) CreateTransfer(
-	ctx context.Context, transfer *ledger.InterAccountTransfer,
+	ctx context.Context, transfer *hummingbird.InterAccountTransfer,
 ) error {
 
 	// Start DB Transaction
@@ -42,7 +42,7 @@ func (ts *TransferService) CreateTransfer(
 		ctx,
 		tx,
 		transfer.FromAccountID,
-		&ledger.AccountUpdate{
+		&hummingbird.AccountUpdate{
 			Delta: -transfer.Amount,
 		},
 	); err != nil {
@@ -51,7 +51,7 @@ func (ts *TransferService) CreateTransfer(
 		ctx,
 		tx,
 		transfer.ToAccountID,
-		&ledger.AccountUpdate{
+		&hummingbird.AccountUpdate{
 			Delta: transfer.Amount,
 		},
 	); err != nil {
@@ -59,6 +59,20 @@ func (ts *TransferService) CreateTransfer(
 	}
 
 	// Create a new transaction
+	transfer.Transaction = &hummingbird.Transaction{
+		Entrys: []*hummingbird.Entry{
+			{
+				AccountID: transfer.FromAccountID,
+				Amount:    -transfer.Amount,
+				Type:      "DEBIT",
+			},
+			{
+				AccountID: transfer.ToAccountID,
+				Amount:    transfer.Amount,
+				Type:      "CREDIT",
+			},
+		},
+	}
 	if err := createTransaction(ctx, tx, transfer.Transaction); err != nil {
 		return err
 	} else {
@@ -75,7 +89,7 @@ func (ts *TransferService) CreateTransfer(
 	// Create TransactionEntrys
 	for _, v := range transfer.Transaction.Entrys {
 		if err := createTransactionEntry(
-			ctx, tx, &ledger.TransactionEntry{
+			ctx, tx, &hummingbird.TransactionEntry{
 				EntryID:       v.ID,
 				TransactionID: transfer.TransactionID,
 			}); err != nil {
@@ -92,7 +106,7 @@ func (ts *TransferService) CreateTransfer(
 
 func (ts *TransferService) FindTransferById(
 	ctx context.Context, id int,
-) (*ledger.InterAccountTransfer, error) {
+) (*hummingbird.InterAccountTransfer, error) {
 	tx, err := ts.db.Begin(ctx)
 	if err != nil {
 		return nil, err
@@ -115,8 +129,8 @@ func (ts *TransferService) FindTransferById(
 	return transfer, nil
 }
 
-func findTransferById(ctx context.Context, tx *Tx, id int) (*ledger.InterAccountTransfer, error) {
-	transfers, count, err := findTransfers(ctx, tx, ledger.TransferFilter{ID: &id})
+func findTransferById(ctx context.Context, tx *Tx, id int) (*hummingbird.InterAccountTransfer, error) {
+	transfers, count, err := findTransfers(ctx, tx, hummingbird.TransferFilter{ID: &id})
 	if err != nil {
 		return nil, err
 	}
@@ -130,9 +144,9 @@ func findTransferById(ctx context.Context, tx *Tx, id int) (*ledger.InterAccount
 func findTransfers(
 	ctx context.Context,
 	tx *Tx,
-	filter ledger.TransferFilter,
+	filter hummingbird.TransferFilter,
 ) (
-	[]*ledger.InterAccountTransfer,
+	[]*hummingbird.InterAccountTransfer,
 	int,
 	error,
 ) {
@@ -160,10 +174,10 @@ func findTransfers(
 		return nil, 0, err
 	}
 	defer rows.Close()
-	transfers := make([]*ledger.InterAccountTransfer, 0)
+	transfers := make([]*hummingbird.InterAccountTransfer, 0)
 	transfer_count := 0
 	for rows.Next() {
-		var transfer ledger.InterAccountTransfer
+		var transfer hummingbird.InterAccountTransfer
 		if err := rows.Scan(
 			&transfer.ID,
 			&transfer.Description,
@@ -185,7 +199,7 @@ func findTransfers(
 }
 
 func attachTransaction(
-	ctx context.Context, tx *Tx, transfer *ledger.InterAccountTransfer,
+	ctx context.Context, tx *Tx, transfer *hummingbird.InterAccountTransfer,
 ) error {
 	if transaction, err := findTransactionById(
 		ctx, tx, transfer.TransactionID,
@@ -197,7 +211,7 @@ func attachTransaction(
 	return nil
 }
 
-func createTransfer(ctx context.Context, tx *Tx, transfer *ledger.InterAccountTransfer) error {
+func createTransfer(ctx context.Context, tx *Tx, transfer *hummingbird.InterAccountTransfer) error {
 	transfer.CreatedAt = tx.asof
 	// Insert row into database.
 	err := tx.QueryRow(ctx, `

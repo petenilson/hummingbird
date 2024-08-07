@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/petenilson/go-ledger"
-	"github.com/petenilson/go-ledger/postgres"
+	"github.com/petenilson/hummingbird"
+	"github.com/petenilson/hummingbird/postgres"
 )
 
 func TestTransactionService_FindTransactionById(t *testing.T) {
@@ -19,26 +19,26 @@ func TestTransactionService_FindTransactionById(t *testing.T) {
 		ts := postgres.NewTransactionService(DB)
 		as := postgres.NewAccountService(DB)
 
-		to_account := &ledger.Account{Name: "To Account"}
-		from_account := &ledger.Account{Name: "From Account"}
+		to_account := &hummingbird.Account{Name: "To Account"}
+		from_account := &hummingbird.Account{Name: "From Account"}
 		if err := as.CreateAccount(cx, to_account); err != nil {
 			t.Fatal(err)
 		} else if err := as.CreateAccount(cx, from_account); err != nil {
 			t.Fatal(err)
 		}
 
-		tx := &ledger.Transaction{
+		tx := &hummingbird.Transaction{
 			Description: "Test Transaction",
-			Entrys: []*ledger.Entry{
+			Entrys: []*hummingbird.Entry{
 				{
 					AccountID: from_account.ID,
 					Amount:    -100,
-					Type:      ledger.DEBIT,
+					Type:      hummingbird.DEBIT,
 				},
 				{
 					AccountID: to_account.ID,
 					Amount:    100,
-					Type:      ledger.CREDIT,
+					Type:      hummingbird.CREDIT,
 				},
 			},
 		}

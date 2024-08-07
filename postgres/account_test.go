@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/petenilson/go-ledger"
-	"github.com/petenilson/go-ledger/postgres"
+	"github.com/petenilson/hummingbird"
+	"github.com/petenilson/hummingbird/postgres"
 )
 
 func TestTransactionService_FindAccounts(t *testing.T) {
@@ -15,11 +15,11 @@ func TestTransactionService_FindAccounts(t *testing.T) {
 
 		as := postgres.NewAccountService(DB)
 
-		to_account := ledger.NewAccount("To Account")
+		to_account := hummingbird.NewAccount("To Account")
 		if err := as.CreateAccount(cx, to_account); err != nil {
 			t.Fatal(err)
 		}
-		fm_account := ledger.NewAccount("From Account")
+		fm_account := hummingbird.NewAccount("From Account")
 		if err := as.CreateAccount(cx, fm_account); err != nil {
 			t.Fatal(err)
 		}
@@ -33,7 +33,7 @@ func TestTransactionService_FindAccounts(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		want_to_account := &ledger.Account{
+		want_to_account := &hummingbird.Account{
 			ID:        to_account.ID,
 			Balance:   0,
 			Name:      "To Account",
@@ -44,7 +44,7 @@ func TestTransactionService_FindAccounts(t *testing.T) {
 			t.Fatalf(cmp.Diff(got_to_account, want_to_account))
 		}
 
-		want_fm_account := &ledger.Account{
+		want_fm_account := &hummingbird.Account{
 			ID:        fm_account.ID,
 			Balance:   0,
 			Name:      "From Account",

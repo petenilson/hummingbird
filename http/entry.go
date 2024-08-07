@@ -8,15 +8,15 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/petenilson/go-ledger"
+	"github.com/petenilson/hummingbird"
 )
 
 func (s *Server) handleListEntrys(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	filter := &ledger.EntryFilter{}
+	filter := &hummingbird.EntryFilter{}
 	if value, ok := vars["account_id"]; ok {
 		if id, err := strconv.Atoi(value); err != nil {
-			Error(w, r, &ledger.Error{Code: ledger.EINVALID, Message: "Invalid account_id"})
+			Error(w, r, &hummingbird.Error{Code: hummingbird.EINVALID, Message: "Invalid account_id"})
 		} else {
 			filter.AccountID = &id
 		}
@@ -44,8 +44,8 @@ func NewEntryService(client *HTTPClient) *EntryService {
 }
 
 func (es *LedgerClient) FindEntrys(
-	ctx context.Context, filter ledger.EntryFilter,
-) ([]*ledger.Entry, int, error) {
+	ctx context.Context, filter hummingbird.EntryFilter,
+) ([]*hummingbird.Entry, int, error) {
 	req, err := es.HTTPClient.newRequest(
 		"GET", fmt.Sprintf("/entrys?account_id=%d", *filter.AccountID), nil)
 	if err != nil {
@@ -59,7 +59,7 @@ func (es *LedgerClient) FindEntrys(
 		return nil, 0, parseResponseError(resp)
 	}
 
-	var entrys []*ledger.Entry
+	var entrys []*hummingbird.Entry
 	defer resp.Body.Close()
 	if err := json.NewDecoder(resp.Body).Decode(&entrys); err != nil {
 		return nil, 0, err

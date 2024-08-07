@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/petenilson/go-ledger"
+	"github.com/petenilson/hummingbird"
 )
 
 type TransactionService struct {
@@ -17,7 +17,7 @@ func NewTransactionService(db *DB) *TransactionService {
 	return &TransactionService{db: db}
 }
 
-func (ts *TransactionService) CreateTransaction(ctx context.Context, transaction *ledger.Transaction) error {
+func (ts *TransactionService) CreateTransaction(ctx context.Context, transaction *hummingbird.Transaction) error {
 	tx, err := ts.db.Begin(ctx)
 	if err != nil {
 		return err
@@ -36,7 +36,7 @@ func (ts *TransactionService) CreateTransaction(ctx context.Context, transaction
 		if err := createTransactionEntry(
 			ctx,
 			tx,
-			&ledger.TransactionEntry{
+			&hummingbird.TransactionEntry{
 				CreatedAt:     v.CreatedAt,
 				EntryID:       v.ID,
 				TransactionID: transaction.ID,
@@ -48,7 +48,7 @@ func (ts *TransactionService) CreateTransaction(ctx context.Context, transaction
 	return tx.Commit(ctx)
 }
 
-func (ts *TransactionService) FindTransactionById(ctx context.Context, id int) (*ledger.Transaction, error) {
+func (ts *TransactionService) FindTransactionById(ctx context.Context, id int) (*hummingbird.Transaction, error) {
 	tx, err := ts.db.Begin(ctx)
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func (ts *TransactionService) FindTransactionById(ctx context.Context, id int) (
 	}
 }
 
-func createTransaction(ctx context.Context, tx *Tx, transaction *ledger.Transaction) error {
+func createTransaction(ctx context.Context, tx *Tx, transaction *hummingbird.Transaction) error {
 	transaction.CreatedAt = tx.asof
 	// Insert row into database.
 	err := tx.QueryRow(ctx, `
@@ -84,8 +84,8 @@ func createTransaction(ctx context.Context, tx *Tx, transaction *ledger.Transact
 	return nil
 }
 
-func findTransactionById(ctx context.Context, tx *Tx, id int) (*ledger.Transaction, error) {
-	transactions, count, err := findTransactions(ctx, tx, ledger.TransactionFilter{ID: &id})
+func findTransactionById(ctx context.Context, tx *Tx, id int) (*hummingbird.Transaction, error) {
+	transactions, count, err := findTransactions(ctx, tx, hummingbird.TransactionFilter{ID: &id})
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func findTransactionById(ctx context.Context, tx *Tx, id int) (*ledger.Transacti
 	return transactions[0], nil
 }
 
-func findTransactions(ctx context.Context, tx *Tx, filter ledger.TransactionFilter) ([]*ledger.Transaction, int, error) {
+func findTransactions(ctx context.Context, tx *Tx, filter hummingbird.TransactionFilter) ([]*hummingbird.Transaction, int, error) {
 	where, args := []string{"1 = 1"}, []interface{}{}
 	if v := filter.ID; v != nil {
 		where, args = append(where, "id = $1"), append(args, *v)
@@ -118,10 +118,10 @@ func findTransactions(ctx context.Context, tx *Tx, filter ledger.TransactionFilt
 		return nil, 0, err
 	}
 	defer rows.Close()
-	transactions := make([]*ledger.Transaction, 0)
+	transactions := make([]*hummingbird.Transaction, 0)
 	transactions_count := 0
 	for rows.Next() {
-		var transaction ledger.Transaction
+		var transaction hummingbird.Transaction
 		if err := rows.Scan(
 			&transaction.ID,
 			(*NullTime)(&transaction.CreatedAt),

@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/petenilson/go-ledger"
+	"github.com/petenilson/hummingbird"
 )
 
-var _ ledger.AccountService = (*AccountService)(nil)
+var _ hummingbird.AccountService = (*AccountService)(nil)
 
 type AccountService struct {
 	db *DB
@@ -23,7 +23,7 @@ func NewAccountService(db *DB) *AccountService {
 
 // UpdateAccount implements ledger.AccountService.
 func (as *AccountService) UpdateAccount(
-	ctx context.Context, account_id int, update *ledger.AccountUpdate,
+	ctx context.Context, account_id int, update *hummingbird.AccountUpdate,
 ) error {
 	tx, err := as.db.Begin(ctx)
 	defer tx.Rollback(ctx)
@@ -39,7 +39,7 @@ func (as *AccountService) UpdateAccount(
 // CreateAccount implements ledger.AccountService.
 func (as *AccountService) CreateAccount(
 	ctx context.Context,
-	account *ledger.Account,
+	account *hummingbird.Account,
 ) error {
 	tx, err := as.db.Begin(ctx)
 	defer tx.Rollback(ctx)
@@ -55,7 +55,7 @@ func (as *AccountService) CreateAccount(
 // FindAccountByID implements ledger.AccountService.
 func (as *AccountService) FindAccountByID(
 	ctx context.Context, account_id int,
-) (*ledger.Account, error) {
+) (*hummingbird.Account, error) {
 	tx, err := as.db.Begin(ctx)
 	if err != nil {
 		return nil, err
@@ -66,11 +66,11 @@ func (as *AccountService) FindAccountByID(
 
 func findAccountById(
 	ctx context.Context, tx *Tx, account_id int,
-) (*ledger.Account, error) {
+) (*hummingbird.Account, error) {
 	accounts, count, err := findAccounts(
 		ctx,
 		tx,
-		&ledger.AccountFilter{
+		&hummingbird.AccountFilter{
 			ID: &account_id,
 		})
 	if err != nil {
@@ -86,8 +86,8 @@ func findAccountById(
 }
 
 func findAccounts(
-	ctx context.Context, tx *Tx, filter *ledger.AccountFilter,
-) ([]*ledger.Account, int, error) {
+	ctx context.Context, tx *Tx, filter *hummingbird.AccountFilter,
+) ([]*hummingbird.Account, int, error) {
 	where, args := []string{"1 = 1"}, []interface{}{}
 	if v := filter.ID; v != nil {
 		where, args = append(where, "id = $1"), append(args, *v)
@@ -111,10 +111,10 @@ func findAccounts(
 		return nil, 0, err
 	}
 	defer rows.Close()
-	accounts := make([]*ledger.Account, 0)
+	accounts := make([]*hummingbird.Account, 0)
 	count := 0
 	for rows.Next() {
-		var account ledger.Account
+		var account hummingbird.Account
 		if err := rows.Scan(
 			&account.ID,
 			&account.Balance,
@@ -133,7 +133,7 @@ func findAccounts(
 	return accounts, count, nil
 }
 
-func createAccount(ctx context.Context, tx *Tx, account *ledger.Account) error {
+func createAccount(ctx context.Context, tx *Tx, account *hummingbird.Account) error {
 	account.CreatedAt = tx.asof
 	account.UpdatedAt = tx.asof
 	// Insert row into database.
@@ -162,7 +162,7 @@ func updateAccount(
 	ctx context.Context,
 	tx *Tx,
 	id int,
-	update *ledger.AccountUpdate,
+	update *hummingbird.AccountUpdate,
 ) error {
 	// Execute update query.
 	if _, err := tx.Exec(ctx, `
