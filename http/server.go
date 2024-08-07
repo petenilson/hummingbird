@@ -2,20 +2,18 @@ package http
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/petenilson/hummingbird"
 )
 
 type Server struct {
 	ln     net.Listener
 	server *http.Server
-	router *mux.Router
+	router *http.ServeMux
 
 	Address string
 
@@ -27,27 +25,25 @@ type Server struct {
 func NewServer(address string) *Server {
 	s := &Server{
 		server:  &http.Server{Addr: address},
-		router:  mux.NewRouter(),
+		router:  http.NewServeMux(),
 		Address: address,
 	}
-	// Set Not Found handler
-	s.router.NotFoundHandler = http.HandlerFunc(handleNotFound)
-
-	// Use middleware to set the default Content-type for all responses.
-	s.router.Use(defaultContentTypeMiddleware)
 
 	// Register Account Routes
-	s.router.HandleFunc("/accounts/{id}", s.handleGetAccountById).Methods("GET")
-	s.router.HandleFunc("/accounts", s.handleCreateAccount).Methods("POST")
+	s.router.HandleFunc("GET /accounts/{id}", s.handleGetAccountById)
+	s.router.HandleFunc("POST /accounts", s.handleCreateAccount)
 
 	// Register Transfer Routes
-	s.router.HandleFunc("/transfers", s.handleCreateTransfer).Methods("POST")
+	s.router.HandleFunc("POST /transfers", s.handleCreateTransfer)
 
 	// Register Entry Routes
-	s.router.HandleFunc("/entrys", s.handleListEntrys).Methods("GET")
+	s.router.HandleFunc("GET /entrys", s.handleListEntrys)
 
-	// Use the mux router as the handler.
-	s.server.Handler = s.router
+	// Set Not Found handler
+	s.router.HandleFunc("/", handleNotFound)
+
+	// Use the http mux router as the handler.
+	s.server.Handler = defaultContentTypeMiddleware(s.router)
 
 	return s
 }
@@ -74,8 +70,9 @@ func (s *Server) URL() string {
 }
 
 func handleNotFound(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotFound)
-	json.NewEncoder(w).Encode(&ErrorResponse{Error: "Resourse Not Found."})
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+	}
 }
 
 func defaultContentTypeMiddleware(next http.Handler) http.Handler {

@@ -7,18 +7,16 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/petenilson/hummingbird"
 )
 
 func (s *Server) handleListEntrys(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
 	filter := &hummingbird.EntryFilter{}
-	if value, ok := vars["account_id"]; ok {
-		if id, err := strconv.Atoi(value); err != nil {
+	if account_id := r.URL.Query().Get("account_id"); account_id != "" {
+		if value, err := strconv.Atoi(account_id); err != nil {
 			Error(w, r, &hummingbird.Error{Code: hummingbird.EINVALID, Message: "Invalid account_id"})
 		} else {
-			filter.AccountID = &id
+			filter.AccountID = &value
 		}
 	}
 

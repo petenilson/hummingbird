@@ -8,12 +8,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/petenilson/hummingbird"
 )
 
 func (s *Server) handleGetAccountById(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(mux.Vars(r)["id"])
+	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		Error(w, r, &hummingbird.Error{Code: hummingbird.EINVALID, Message: "Invalid Account ID"})
 		return
