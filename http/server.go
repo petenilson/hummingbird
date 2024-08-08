@@ -17,9 +17,9 @@ type Server struct {
 
 	Address string
 
-	EntryService    hummingbird.EntryService
-	AccountService  hummingbird.AccountService
-	TransferService hummingbird.TransferService
+	EntryService       hummingbird.EntryService
+	AccountService     hummingbird.AccountService
+	TransactionService hummingbird.TransactionService
 }
 
 func NewServer(address string) *Server {
@@ -33,8 +33,8 @@ func NewServer(address string) *Server {
 	s.router.HandleFunc("GET /accounts/{id}", s.handleGetAccountById)
 	s.router.HandleFunc("POST /accounts", s.handleCreateAccount)
 
-	// Register Transfer Routes
-	s.router.HandleFunc("POST /transfers", s.handleCreateTransfer)
+	// Register Transaction Routes
+	s.router.HandleFunc("POST /transactions", s.handleCreateTransaction)
 
 	// Register Entry Routes
 	s.router.HandleFunc("GET /entrys", s.handleListEntrys)

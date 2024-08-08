@@ -45,7 +45,7 @@ func TestTransactionService_FindTransactionById(t *testing.T) {
 		if err := ts.CreateTransaction(cx, tx); err != nil {
 			t.Fatal(err)
 		}
-		if result, err := ts.FindTransactionById(cx, tx.ID); err != nil {
+		if result, err := ts.FindTransactionByID(cx, tx.ID); err != nil {
 			t.Fatal(err)
 		} else if got, want := result.ID, tx.ID; got != want {
 			t.Fatalf("ID=%v, want %v", got, want)

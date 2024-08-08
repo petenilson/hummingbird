@@ -60,8 +60,8 @@ func (m *Main) Run(ctx context.Context) error {
 	}
 
 	m.HTTPServer.AccountService = postgres.NewAccountService(m.DB)
-	m.HTTPServer.TransferService = postgres.NewTransferService(m.DB)
 	m.HTTPServer.EntryService = postgres.NewEntryService(m.DB)
+	m.HTTPServer.TransactionService = postgres.NewTransactionService(m.DB)
 
 	if err := m.HTTPServer.Open(); err != nil {
 		return err

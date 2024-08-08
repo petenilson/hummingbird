@@ -23,19 +23,6 @@ CREATE TABLE entrys (
   CONSTRAINT fk_account FOREIGN KEY (account_id) REFERENCES accounts (id)
 );
 
-CREATE TABLE transfers (
-  id SERIAL PRIMARY KEY,
-  transaction_id int NOT NULL,
-  amount int NOT NULL,
-  from_account_id int NOT NULL,
-  to_account_id int NOT NULL,
-  reason VARCHAR(255) NOT NULL,
-  created_at TEXT NOT NULL,
-  CONSTRAINT fk_to_account FOREIGN KEY (to_account_id) REFERENCES accounts (id),
-  CONSTRAINT fk_from_account FOREIGN KEY (from_account_id) REFERENCES accounts (id),
-  CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES transactions (id)
-);
-
 CREATE TABLE transaction_entrys (
   id SERIAL PRIMARY KEY,
   entry_id INTEGER NOT NULL,
