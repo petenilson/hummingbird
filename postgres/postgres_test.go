@@ -18,33 +18,39 @@ import (
 var DB *postgres.DB
 
 func TestMain(m *testing.M) {
-	db, err := MustOpenTestDB(m)
+
+	// Open new Test Container
+	container, err := CreateContainer()
 	if err != nil {
 		log.Fatal(err)
 	}
-	DB = db
-	db.Now = func() time.Time {
+
+	// Get the connection string from container
+	dsn, err := container.ConnectionString(context.Background(), "sslmode=disable")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Make the DB avaiable for all test cases and then open the DB.
+	DB = postgres.NewDB(dsn)
+	if err := DB.Open(); err != nil {
+		log.Fatal(err)
+	}
+
+	// Mock the DB.Now so all entities created in the DB should be equal.
+	DB.Now = func() time.Time {
 		return time.Date(2000, time.January, 1, 1, 0, 0, 0, time.UTC)
 	}
 
+	// Run the all the tests
 	exit_code := m.Run()
 
-	db.Close()
+	// Clean up by closing the test database and write and write the status code to STDOUT
+	DB.Close()
 	os.Exit(exit_code)
 }
 
-func NewTestDB(tb testing.TB) *postgres.DB {
-	tb.Helper()
-	container := MustCreateContainer(tb)
-	dsn, err := container.ConnectionString(context.Background(), "sslmode=disable")
-	if err != nil {
-		tb.Fatal(err)
-	}
-	return postgres.NewDB(dsn)
-}
-
-func MustCreateContainer(tb testing.TB) *container_postgres.PostgresContainer {
-	tb.Helper()
+func CreateContainer() (*container_postgres.PostgresContainer, error) {
 	container, err := container_postgres.Run(
 		context.Background(),
 		"docker.io/postgres:16-alpine",
@@ -57,24 +63,7 @@ func MustCreateContainer(tb testing.TB) *container_postgres.PostgresContainer {
 				WithStartupTimeout(5*time.Second)),
 	)
 	if err != nil {
-		tb.Fatal(err)
+		return nil, err
 	}
-	return container
-}
-
-func MustOpenTestDB(tb testing.TB) *postgres.DB {
-	tb.Helper()
-	ctx := context.Background()
-
-	container := MustCreateContainer(tb)
-	connStr, err := container.ConnectionString(ctx, "sslmode=disable")
-	if err != nil {
-		tb.Fatal(err)
-	}
-	db := postgres.NewDB(connStr)
-
-	if err := db.Open(); err != nil {
-		tb.Fatal(err)
-	}
-	return db
+	return container, nil
 }
