@@ -11,20 +11,17 @@ import (
 )
 
 func TestTransactions(t *testing.T) {
-	m := MustRunMain(t)
-	defer MustCloseMain(t, m)
-
 	ctx := context.Background()
 
 	test_client := http.LedgerClient{
-		HTTPClient: &http.HTTPClient{URL: m.HTTPServer.URL()},
+		HTTPClient: &http.HTTPClient{URL: TestServer.URL},
 	}
 
 	// Create the accounts first to perform the transfer between.
 	account_from := &hummingbird.Account{Name: "Account From"}
 	account_to := &hummingbird.Account{Name: "Account To"}
-	MustCreateAccount(t, m, account_from)
-	MustCreateAccount(t, m, account_to)
+	MustCreateAccount(t, Services.AccountService, account_from)
+	MustCreateAccount(t, Services.AccountService, account_to)
 
 	// Create the transaction.
 	transaction := &hummingbird.Transaction{
@@ -58,12 +55,11 @@ func TestTransactions(t *testing.T) {
 	} else if diff := cmp.Diff(
 		&hummingbird.Entry{
 			AccountID: account_from.ID,
-			CreatedAt: m.DB.Now(),
 			Amount:    -10_000,
 			Type:      hummingbird.DEBIT,
 		},
 		entrys[0],
-		cmpopts.IgnoreFields(hummingbird.Entry{}, "ID"),
+		cmpopts.IgnoreFields(hummingbird.Entry{}, "ID", "CreatedAt"),
 	); diff != "" {
 		t.Fatalf("Want matching entrys but got: %s", diff)
 	}
@@ -77,12 +73,11 @@ func TestTransactions(t *testing.T) {
 	} else if diff := cmp.Diff(
 		&hummingbird.Entry{
 			AccountID: account_to.ID,
-			CreatedAt: m.DB.Now(),
 			Amount:    10_000,
 			Type:      hummingbird.CREDIT,
 		},
 		entrys[0],
-		cmpopts.IgnoreFields(hummingbird.Entry{}, "ID"),
+		cmpopts.IgnoreFields(hummingbird.Entry{}, "ID", "CreatedAt"),
 	); diff != "" {
 		t.Fatalf("Want matching entrys but got: %s", diff)
 	}

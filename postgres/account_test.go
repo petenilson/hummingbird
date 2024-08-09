@@ -15,11 +15,11 @@ func TestTransactionService_FindAccounts(t *testing.T) {
 
 		as := postgres.NewAccountService(DB)
 
-		to_account := hummingbird.NewAccount("To Account")
+		to_account := &hummingbird.Account{Name: "To Account"}
 		if err := as.CreateAccount(cx, to_account); err != nil {
 			t.Fatal(err)
 		}
-		fm_account := hummingbird.NewAccount("From Account")
+		fm_account := &hummingbird.Account{Name: "From Account"}
 		if err := as.CreateAccount(cx, fm_account); err != nil {
 			t.Fatal(err)
 		}

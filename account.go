@@ -13,13 +13,6 @@ type Account struct {
 	UpdatedAt time.Time
 }
 
-func NewAccount(name string) *Account {
-	return &Account{
-		Balance: 0,
-		Name:    name,
-	}
-}
-
 type AccountFilter struct {
 	ID *int
 }

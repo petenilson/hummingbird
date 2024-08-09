@@ -12,10 +12,7 @@ import (
 func TestTransactionService_FindTransactionById(t *testing.T) {
 	t.Run("OK", func(*testing.T) {
 		cx := context.Background()
-		// I want to create a new TX here
-		// Functions being tested should use that transaction
-		// to create nested transactions within.
-		// I want to then rollbock the outermost transaction
+
 		ts := postgres.NewTransactionService(DB)
 		as := postgres.NewAccountService(DB)
 

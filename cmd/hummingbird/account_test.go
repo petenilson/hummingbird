@@ -10,13 +10,11 @@ import (
 )
 
 func TestAccounts(t *testing.T) {
-	m := MustRunMain(t)
-	defer MustCloseMain(t, m)
 
 	ctx := context.Background()
 
 	test_client := http.LedgerClient{
-		HTTPClient: &http.HTTPClient{URL: m.HTTPServer.URL()},
+		HTTPClient: &http.HTTPClient{URL: TestServer.URL},
 	}
 
 	t.Run("CreateAccount", func(t *testing.T) {

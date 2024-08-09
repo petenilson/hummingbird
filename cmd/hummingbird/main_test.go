@@ -2,6 +2,8 @@ package main_test
 
 import (
 	"context"
+	"log"
+	"os"
 	"testing"
 	"time"
 
@@ -12,43 +14,63 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-func MustRunMain(tb testing.TB) *main.Main {
-	tb.Helper()
+var TestServer struct {
+	URL string
+}
 
-	container := MustCreateContainer(tb)
+var Services struct {
+	AccountService hummingbird.AccountService
+}
+
+func TestMain(m *testing.M) {
+
+	container, err := CreateContainer()
+	if err != nil {
+		log.Fatal(err)
+	}
 	dsn, err := container.ConnectionString(context.Background(), "sslmode=disable")
 	if err != nil {
-		tb.Fatal(err)
+		log.Fatal(err)
 	}
 
-	m := main.NewMain()
-	m.Config.DB.DSN = dsn
-	m.Config.HTTP.Address = "localhost:8000"
+	application := main.NewMain()
+	application.Config.DB.DSN = dsn
+	application.Config.HTTP.Address = "localhost:8000"
 
-	if err := m.Run(context.Background()); err != nil {
-		tb.Fatal(err)
+	if err := application.Run(context.Background()); err != nil {
+		log.Fatal(err)
 	}
 
-	m.DB.Now = func() time.Time { return time.Date(2000, time.January, 1, 1, 0, 0, 0, time.UTC) }
-	return m
+	// Set the URL of the web server so that test clients can connect.
+	TestServer.URL = application.HTTPServer.URL()
+
+	// Some tests require direct access to underlying services.
+	Services.AccountService = application.HTTPServer.AccountService
+
+	application.DB.Now = func() time.Time { return time.Date(2000, time.January, 1, 1, 0, 0, 0, time.UTC) }
+
+	// Run the all the tests
+	exit_code := m.Run()
+
+	// Clean up and shut down.
+	if err := application.Close(); err != nil {
+		log.Fatal(err)
+	}
+	os.Exit(exit_code)
 }
 
-func MustCreateAccount(tb testing.TB, m *main.Main, account *hummingbird.Account) {
+func MustCreateAccount(
+	tb testing.TB,
+	as hummingbird.AccountService,
+	account *hummingbird.Account,
+) {
 	tb.Helper()
-	if err := m.HTTPServer.AccountService.CreateAccount(context.Background(), account); err != nil {
+	if err := as.CreateAccount(context.Background(), account); err != nil {
 		tb.Fatal(err)
 	}
 }
 
-func MustCloseMain(tb testing.TB, m *main.Main) {
-	tb.Helper()
-	if err := m.Close(); err != nil {
-		tb.Fatal(err)
-	}
-}
-
-func MustCreateContainer(tb testing.TB) *postgres.PostgresContainer {
-	tb.Helper()
+func CreateContainer() (*postgres.PostgresContainer, error) {
 	container, err := postgres.Run(
 		context.Background(),
 		"docker.io/postgres:16-alpine",
@@ -61,7 +83,7 @@ func MustCreateContainer(tb testing.TB) *postgres.PostgresContainer {
 				WithStartupTimeout(5*time.Second)),
 	)
 	if err != nil {
-		tb.Fatal(err)
+		return nil, err
 	}
-	return container
+	return container, nil
 }
