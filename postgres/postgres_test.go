@@ -11,7 +11,7 @@ import (
 	"github.com/petenilson/hummingbird/postgres"
 
 	"github.com/testcontainers/testcontainers-go"
-	container_postgres "github.com/testcontainers/testcontainers-go/modules/postgres"
+	tc_postgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
@@ -50,13 +50,13 @@ func TestMain(m *testing.M) {
 	os.Exit(exit_code)
 }
 
-func CreateContainer() (*container_postgres.PostgresContainer, error) {
-	container, err := container_postgres.Run(
+func CreateContainer() (*tc_postgres.PostgresContainer, error) {
+	container, err := tc_postgres.Run(
 		context.Background(),
 		"docker.io/postgres:16-alpine",
-		container_postgres.WithDatabase("TestDB"),
-		container_postgres.WithUsername("TestUser"),
-		container_postgres.WithPassword("TestPassword"),
+		tc_postgres.WithDatabase("TestDB"),
+		tc_postgres.WithUsername("TestUser"),
+		tc_postgres.WithPassword("TestPassword"),
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("database system is ready to accept connections").
 				WithOccurrence(2).
