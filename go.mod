@@ -5,6 +5,7 @@ go 1.22.5
 require (
 	github.com/google/go-cmp v0.6.0
 	github.com/jackc/pgx/v5 v5.6.0
+	github.com/pelletier/go-toml v1.9.5
 	github.com/testcontainers/testcontainers-go v0.32.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.32.0
 )

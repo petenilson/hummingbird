@@ -33,7 +33,7 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	application := main.NewMain()
+	application := main.NewApplication()
 	application.Config.DB.DSN = dsn
 	application.Config.HTTP.Address = "localhost:8000"
 

@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -78,8 +77,7 @@ func findAccountById(
 	}
 
 	if count == 0 {
-		// TODO: Better error handling here
-		return nil, errors.New("Account Not Found.")
+		return nil, &hummingbird.Error{Code: hummingbird.ENOTFOUND, Message: "Account Not Found"}
 	} else {
 		return accounts[0], nil
 	}
