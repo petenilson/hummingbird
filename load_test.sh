@@ -3,14 +3,14 @@
 set -e  # Exit immediately if a command exits with a non-zero status.
 
 echo "Creating Docker container..."
-docker run --name loadtest -p 5432:5432 -e POSTGRES_USER=ledger_user -e POSTGRES_PASSWORD=ledger_password -e POSTGRES_DB=ledger_db -d postgres:16-alpine
+docker run --name loadtest -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=load_test -d postgres:16-alpine
 
 
 echo "Waiting for container..."
 sleep 3
 
 echo "Starting webserver..."
-./hummingbird &SERVER_PID=$!
+./hummingbird -config ./loadtest.conf &SERVER_PID=$!
 
 echo "Waiting for webserver..."
 sleep 2

@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	DefaultConfigPath = "~./hummingbird.conf"
+	DefaultConfigPath = "./hummingbird.conf"
 )
 
 func main() {
