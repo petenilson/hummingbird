@@ -7,10 +7,48 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/petenilson/hummingbird"
 )
 
-func (s *Server) handleListEntrys(w http.ResponseWriter, r *http.Request) {
+func (s *Server) registerEntryRoutes(h huma.API) {
+	// Get Entrys for an Account
+	huma.Register(
+		h,
+		huma.Operation{
+			OperationID:   "list-entrys",
+			Method:        http.MethodGet,
+			Path:          "/accounts/{id}/entrys",
+			Summary:       "List Entrys",
+			DefaultStatus: http.StatusOK,
+		},
+		s.handleGetEntrysForAccountID,
+	)
+}
+
+func (s *Server) handleGetEntrysForAccountID(
+	ctx context.Context,
+	req *struct {
+		AccountID int `path:"id" maxLength:"30" example:"1" doc:"Account ID"`
+	},
+) (*Response[[]*hummingbird.Entry], error) {
+	entrys, _, err := s.EntryService.FindEntrys(
+		ctx,
+		hummingbird.EntryFilter{
+			AccountID: &req.AccountID,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &Response[[]*hummingbird.Entry]{
+		Body: &entrys,
+	}
+
+	return response, nil
+}
+func (s *Server) handleListEntrysOld(w http.ResponseWriter, r *http.Request) {
 	filter := &hummingbird.EntryFilter{}
 	if account_id := r.URL.Query().Get("account_id"); account_id != "" {
 		if value, err := strconv.Atoi(account_id); err != nil {

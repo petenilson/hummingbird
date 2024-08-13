@@ -6,49 +6,76 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/petenilson/hummingbird"
 )
 
-func (s *Server) handleGetAccountById(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.PathValue("id"))
-	if err != nil {
-		Error(w, r, &hummingbird.Error{Code: hummingbird.EINVALID, Message: "Invalid Account ID"})
-		return
-	}
+func (s *Server) registerAccountRoutes(h huma.API) {
+	// Get Account by id
+	huma.Register(
+		h,
+		huma.Operation{
+			OperationID:   "get-account",
+			Method:        http.MethodGet,
+			Path:          "/accounts/{id}",
+			Summary:       "Get Account",
+			DefaultStatus: http.StatusOK,
+		},
+		s.handleGetAccountById,
+	)
 
-	account, err := s.AccountService.FindAccountByID(r.Context(), id)
-	if err != nil {
-		Error(w, r, err)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(account); err != nil {
-		LogError(r, err)
-		return
-	}
+	// Create Account
+	huma.Register(
+		h,
+		huma.Operation{
+			OperationID:   "create-account",
+			Method:        http.MethodPost,
+			Path:          "/accounts",
+			Summary:       "Create Account",
+			DefaultStatus: http.StatusCreated,
+		},
+		s.handleCreateAccount,
+	)
 }
 
-func (s *Server) handleCreateAccount(w http.ResponseWriter, r *http.Request) {
-	var account hummingbird.Account
-	if err := json.NewDecoder(r.Body).Decode(&account); err != nil {
-		Error(w, r, &hummingbird.Error{Code: hummingbird.EINVALID, Message: "Invalid JSON"})
-		return
-	}
-
-	err := s.AccountService.CreateAccount(r.Context(), &account)
+func (s *Server) handleGetAccountById(
+	ctx context.Context,
+	req *struct {
+		AccountID int `path:"id" maxLength:"30" example:"1" doc:"Account ID"`
+	},
+) (*Response[hummingbird.Account], error) {
+	account, err := s.AccountService.FindAccountByID(ctx, req.AccountID)
 	if err != nil {
-		Error(w, r, err)
-		return
+		return nil, err
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(account); err != nil {
-		LogError(r, err)
-		return
+	response := &Response[hummingbird.Account]{
+		Body: account,
 	}
+
+	return response, nil
+}
+
+func (s *Server) handleCreateAccount(
+	ctx context.Context,
+	req *struct {
+		Body struct {
+			Name string `json:"name" example:"My Account Name" doc:"Account name"`
+		}
+	},
+) (*Response[hummingbird.Account], error) {
+	account := &hummingbird.Account{Name: req.Body.Name}
+	err := s.AccountService.CreateAccount(ctx, account)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &Response[hummingbird.Account]{
+		Body: account,
+	}
+
+	return response, nil
 }
 
 type AccountService struct {
@@ -60,7 +87,12 @@ func NewAccountService(client *HTTPClient) *AccountService {
 }
 
 func (c *LedgerClient) CreateAccount(ctx context.Context, account *hummingbird.Account) error {
-	body, err := json.Marshal(account)
+	r := struct {
+		Name string `json:"name"`
+	}{
+		Name: account.Name,
+	}
+	body, err := json.Marshal(r)
 	if err != nil {
 		return err
 	}

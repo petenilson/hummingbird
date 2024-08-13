@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/petenilson/hummingbird"
 )
 
@@ -29,21 +31,22 @@ func NewServer(address string) *Server {
 		Address: address,
 	}
 
+	h := humago.New(s.router, huma.DefaultConfig("Hummingbird", "1.0.0"))
+
 	// Register Account Routes
-	s.router.HandleFunc("GET /accounts/{id}", s.handleGetAccountById)
-	s.router.HandleFunc("POST /accounts", s.handleCreateAccount)
+	s.registerAccountRoutes(h)
 
 	// Register Transaction Routes
-	s.router.HandleFunc("POST /transactions", s.handleCreateTransaction)
+	s.registerTransactionRoutes(h)
 
 	// Register Entry Routes
-	s.router.HandleFunc("GET /entrys", s.handleListEntrys)
+	s.registerEntryRoutes(h)
 
 	// Set Not Found handler
 	s.router.HandleFunc("/", handleNotFound)
 
 	// Use the http mux router as the handler.
-	s.server.Handler = defaultContentTypeMiddleware(s.router)
+	s.server.Handler = s.router
 
 	return s
 }
@@ -73,6 +76,10 @@ func handleNotFound(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 	}
+}
+
+type Response[T any] struct {
+	Body *T
 }
 
 func defaultContentTypeMiddleware(next http.Handler) http.Handler {

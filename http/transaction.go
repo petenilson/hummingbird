@@ -6,39 +6,104 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/petenilson/hummingbird"
 )
 
-func (s *Server) handleCreateTransaction(w http.ResponseWriter, r *http.Request) {
-	var transaction hummingbird.Transaction
-	if err := json.NewDecoder(r.Body).Decode(&transaction); err != nil {
-		Error(w, r, &hummingbird.Error{Code: hummingbird.EINVALID, Message: "Invalid JSON"})
-		return
+func (s *Server) registerTransactionRoutes(h huma.API) {
+	huma.Register(
+		h,
+		huma.Operation{
+			OperationID:   "create-transaction",
+			Method:        http.MethodPost,
+			Path:          "/transactions",
+			Summary:       "Create Transaction",
+			DefaultStatus: http.StatusCreated,
+		},
+		s.handleCreateTransaction,
+	)
+}
+
+type CreateTransactionBody struct {
+	Description string `json:"description"`
+	Entrys      []struct {
+		AccountID int    `json:"account_id"`
+		Amount    int    `json:"amount"`
+		Type      string `json:"string" enum:"DEBIT,CREDIT"`
+	} `json:"entrys"`
+}
+
+func (s *Server) handleCreateTransaction(
+	ctx context.Context,
+	req *struct {
+		Body struct {
+			Description string
+			Entrys      []*struct {
+				AccountID int    `json:"account_id"`
+				Amount    int    `json:"amount"`
+				Type      string `json:"string" enum:"DEBIT,CREDIT"`
+			}
+		}
+	},
+) (*Response[hummingbird.Transaction], error) {
+	transaction := &hummingbird.Transaction{
+		Description: req.Body.Description,
+	}
+	for _, i := range req.Body.Entrys {
+		e := &hummingbird.Entry{
+			AccountID: i.AccountID,
+			Amount:    i.Amount,
+			Type:      hummingbird.EntryType(i.Type),
+		}
+		transaction.Entrys = append(transaction.Entrys, e)
 	}
 
-	err := s.TransactionService.CreateTransaction(r.Context(), &transaction)
+	err := s.TransactionService.CreateTransaction(ctx, transaction)
 	if err != nil {
-		Error(w, r, err)
-		return
+		return nil, err
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(transaction); err != nil {
-		LogError(r, err)
-		return
+	response := &Response[hummingbird.Transaction]{
+		Body: transaction,
 	}
+
+	return response, nil
 }
 
 func (c *LedgerClient) CreateTransaction(
 	ctx context.Context,
 	transaction *hummingbird.Transaction,
 ) error {
-	body, err := json.Marshal(transaction)
+	body := struct {
+		Description string
+		Entrys      []struct {
+			AccountID int    `json:"account_id"`
+			Amount    int    `json:"amount"`
+			Type      string `json:"string"`
+		}
+	}{
+		Description: transaction.Description,
+	}
+	for _, e := range transaction.Entrys {
+		body.Entrys = append(
+			body.Entrys,
+			struct {
+				AccountID int    `json:"account_id"`
+				Amount    int    `json:"amount"`
+				Type      string `json:"string"`
+			}{
+				e.AccountID,
+				e.Amount,
+				string(e.Type),
+			},
+		)
+	}
+	body_bytes, err := json.Marshal(body)
 	if err != nil {
 		return err
 	}
 
-	req, err := c.HTTPClient.newRequest("POST", "/transactions", bytes.NewReader(body))
+	req, err := c.HTTPClient.newRequest("POST", "/transactions", bytes.NewReader(body_bytes))
 	if err != nil {
 		return err
 	}
