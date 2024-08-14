@@ -14,8 +14,8 @@ var TestAddress string = "http://localhost:8000"
 type TestServer struct {
 	*hbhttp.Server
 
-	AccountService     mocks.AccountService
-	TransactionService mocks.TransactionService
+	AccountService  mocks.AccountService
+	TransferService mocks.TransferService
 }
 
 func MustOpenServer(tb testing.TB) *TestServer {
@@ -24,7 +24,7 @@ func MustOpenServer(tb testing.TB) *TestServer {
 	s := &TestServer{Server: hbhttp.NewServer("localhost:8000")}
 
 	s.Server.AccountService = &s.AccountService
-	s.Server.TransactionService = &s.TransactionService
+	s.Server.TransferService = &s.TransferService
 
 	if err := s.Open(); err != nil {
 		tb.Fatal(err)

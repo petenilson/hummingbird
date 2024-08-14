@@ -66,8 +66,7 @@ func (s *Server) handleCreateAccount(
 	},
 ) (*Response[hummingbird.Account], error) {
 	account := &hummingbird.Account{Name: req.Body.Name}
-	err := s.AccountService.CreateAccount(ctx, account)
-	if err != nil {
+	if err := s.AccountService.CreateAccount(ctx, account); err != nil {
 		return nil, err
 	}
 

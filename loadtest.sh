@@ -23,7 +23,7 @@ done
 echo "Finished creating test accounts."
 
 echo "Running load test..."
-wrk -t12 -c400 -d30s -s wrk_script.lua http://localhost:8000
+wrk -t12 -c400 -d30s -s wrk.lua http://localhost:8000
 
 echo "Stopping server..."
 kill $SERVER_PID

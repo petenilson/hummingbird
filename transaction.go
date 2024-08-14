@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Transaction represents a complete financial event with at least two entrys.
+// Transaction represents a complete financial event with at least two or more entrys.
 // The entrys of a transaction should balance out.
 type Transaction struct {
 	ID          int       `json:"id"`

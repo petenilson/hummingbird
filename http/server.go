@@ -21,6 +21,7 @@ type Server struct {
 
 	EntryService       hummingbird.EntryService
 	AccountService     hummingbird.AccountService
+	TransferService    hummingbird.TransferService
 	TransactionService hummingbird.TransactionService
 }
 
@@ -41,6 +42,9 @@ func NewServer(address string) *Server {
 
 	// Register Entry Routes
 	s.registerEntryRoutes(h)
+
+	// Register Transfer Routes
+	s.registerTransferRoutes(h)
 
 	// Set Not Found handler
 	s.router.HandleFunc("/", handleNotFound)

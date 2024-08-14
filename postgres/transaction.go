@@ -9,8 +9,6 @@ import (
 	"github.com/petenilson/hummingbird"
 )
 
-var _ hummingbird.TransactionService = (*TransactionService)(nil)
-
 type TransactionService struct {
 	db *DB
 }
@@ -19,7 +17,6 @@ func NewTransactionService(db *DB) *TransactionService {
 	return &TransactionService{db: db}
 }
 
-// CreateTransaction implements hummingbird.TransactionService.
 func (ts *TransactionService) CreateTransaction(ctx context.Context, transaction *hummingbird.Transaction) error {
 	tx, err := ts.db.Begin(ctx)
 	if err != nil {
@@ -51,7 +48,6 @@ func (ts *TransactionService) CreateTransaction(ctx context.Context, transaction
 	return tx.Commit(ctx)
 }
 
-// FindTransactionById implements hummingbird.TransactionService.
 func (ts *TransactionService) FindTransactionByID(ctx context.Context, id int) (*hummingbird.Transaction, error) {
 	tx, err := ts.db.Begin(ctx)
 	if err != nil {

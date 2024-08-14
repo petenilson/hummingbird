@@ -10,36 +10,17 @@ request = function()
 		from_account_id = math.random(1, 1000)
 	end
 
-	local json = string.format(
-		[[
-{
-  "Description": "%s",
-  "Entrys": [
-    {
-      "AccountID": %d,
-      "Amount": %d,
-      "Type": "%s"
-    },
-    {
-      "AccountID": %d,
-      "Amount": %d,
-      "Type": "%s"
-    }
-  ]
-}]],
-		"Test Transaction", -- Description
-		from_account_id,
-		-amount,
-		"DEBIT", -- First Entry
+	local body = string.format(
+		'{"to_account_id": %d, "from_account_id": %d, "amount": %d}',
 		to_account_id,
-		amount,
-		"CREDIT" -- Second Entry
+		from_account_id,
+		amount
 	)
 
 	local headers = {}
 	headers["Content-Type"] = "application/json"
 
-	return wrk.format("POST", "/transactions", headers, json)
+	return wrk.format("POST", "/transfers", headers, body)
 end
 
 responses = {}
