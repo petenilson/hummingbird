@@ -32,6 +32,13 @@ func TestTransfers(t *testing.T) {
 		t.Fatal()
 	}
 
+	// Find the transfer and make sure it's equal to the transfer created.
+	if tf, err := test_client.FindTransferByID(ctx, transfer.ID); err != nil {
+		t.Fatal(err)
+	} else if diff := cmp.Diff(tf, transfer); diff != "" {
+		t.Fatalf("Want %v, got %v", transfer, tf)
+	}
+
 	// Find the entrys related to the transfer that we just created.
 	if entrys, count, err := test_client.FindEntrys(
 		ctx, hummingbird.EntryFilter{AccountID: &account_from.ID},

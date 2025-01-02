@@ -17,12 +17,7 @@ type Transfer struct {
 	TransactionID int          `json:"transaction_id"`
 }
 
-func NewTransfer(
-	from_account_id,
-	to_account_id,
-	amount int,
-	reason string,
-) *Transfer {
+func NewTransfer(from_account_id, to_account_id, amount int, reason string) *Transfer {
 	return &Transfer{
 		Description:   reason,
 		Amount:        amount,
@@ -50,5 +45,6 @@ type TransferFilter struct {
 }
 
 type TransferService interface {
-	CreateTransfer(context.Context, *Transfer) error
+	CreateTransfer(ctx context.Context, transfer *Transfer) error
+	FindTransferByID(ctx context.Context, id int) (*Transfer, error)
 }

@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -34,37 +33,16 @@ func (c *HTTPClient) newRequest(method, url string, body io.Reader) (*http.Reque
 	return req, nil
 }
 
-func Error(w http.ResponseWriter, r *http.Request, e error) {
-	code, message := hummingbird.ErrorCode(e), hummingbird.ErrorMessage(e)
-
-	if code == hummingbird.EINTERNAL {
-		LogError(r, e)
-	}
-
-	w.Header().Set("Content-type", "application/json")
-	w.WriteHeader(ErrorStatusCode(code))
-	json.NewEncoder(w).Encode(&ErrorResponse{Error: message})
-}
-
-type ErrorResponse struct {
-	Error string `json:"error"`
-}
-
 func parseResponseError(resp *http.Response) error {
 	defer resp.Body.Close()
 
-	buf, err := io.ReadAll(resp.Body)
+	bs, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
 
-	var errorResponse ErrorResponse
-	if err := json.Unmarshal(buf, &errorResponse); err != nil {
-		return err
-	}
-
 	return &hummingbird.Error{
-		Message: errorResponse.Error,
+		Message: string(bs),
 		Code:    FromErrorStatusCode(resp.StatusCode),
 	}
 }

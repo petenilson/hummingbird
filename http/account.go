@@ -22,7 +22,7 @@ func (s *Server) registerAccountRoutes(h huma.API) {
 			Summary:       "Get Account",
 			DefaultStatus: http.StatusOK,
 		},
-		s.handleGetAccountById,
+		s.handleGetAccountByID,
 	)
 
 	// Create Account
@@ -39,10 +39,10 @@ func (s *Server) registerAccountRoutes(h huma.API) {
 	)
 }
 
-func (s *Server) handleGetAccountById(
+func (s *Server) handleGetAccountByID(
 	ctx context.Context,
 	req *struct {
-		AccountID int `path:"id" maxLength:"30" example:"1" doc:"Account ID"`
+		AccountID int `path:"id" example:"123" doc:"Account ID"`
 	},
 ) (*Response[hummingbird.Account], error) {
 	account, err := s.AccountService.FindAccountByID(ctx, req.AccountID)

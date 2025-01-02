@@ -22,15 +22,48 @@ func (s *Server) registerTransactionRoutes(h huma.API) {
 		},
 		s.handleCreateTransaction,
 	)
+	// Register Get Transaction
+	huma.Register(
+		h,
+		huma.Operation{
+			OperationID:   "get-transaction",
+			Method:        http.MethodGet,
+			Path:          "/transactions/{transaction}",
+			Summary:       "Get Transaction",
+			DefaultStatus: http.StatusOK,
+		},
+		s.handleGetTransaction,
+	)
+	// Register List Transactions for Transfer
+	huma.Register(
+		h,
+		huma.Operation{
+			OperationID:   "get-transactions-for-transfer",
+			Method:        http.MethodGet,
+			Path:          "/transfers/{transfer}/transactions",
+			Summary:       "Get Transactions for Transfer",
+			DefaultStatus: http.StatusOK,
+		},
+		s.handleGetTransaction,
+	)
 }
 
-type CreateTransactionBody struct {
-	Description string `json:"description"`
-	Entrys      []struct {
-		AccountID int    `json:"account_id"`
-		Amount    int    `json:"amount"`
-		Type      string `json:"string" enum:"DEBIT,CREDIT"`
-	} `json:"entrys"`
+func (s *Server) handleGetTransaction(
+	ctx context.Context,
+	request *struct {
+		Transaction int `path:"transaction"`
+	},
+) (*Response[hummingbird.Transaction], error) {
+	transaction, err := s.TransactionService.FindTransactionByID(ctx, request.Transaction)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &Response[hummingbird.Transaction]{
+		Body: transaction,
+	}
+
+	return response, nil
 }
 
 func (s *Server) handleCreateTransaction(

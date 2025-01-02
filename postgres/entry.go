@@ -74,7 +74,7 @@ func createEntry(ctx context.Context, tx *Tx, entry *hummingbird.Entry) error {
 func attachEntrys(
 	ctx context.Context, tx *Tx, transaction *hummingbird.Transaction,
 ) error {
-	if entries, _, err := findEntriesByTransactionID(
+	if entries, _, err := findEntrysByTransactionID(
 		ctx,
 		tx,
 		transaction.ID,

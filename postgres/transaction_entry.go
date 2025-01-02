@@ -26,7 +26,7 @@ func (tas *TransactionEntryService) FindEntrsyByTransactionID(
 		return nil, 0, err
 	}
 	defer tx.Rollback(ctx)
-	return findEntriesByTransactionID(ctx, tx, transaction_id)
+	return findEntrysByTransactionID(ctx, tx, transaction_id)
 }
 
 func createTransactionEntry(
@@ -55,7 +55,7 @@ func createTransactionEntry(
 	return nil
 }
 
-func findEntriesByTransactionID(
+func findEntrysByTransactionID(
 	ctx context.Context, tx *Tx, transaction_id int,
 ) ([]*hummingbird.Entry, int, error) {
 	rows, err := tx.Query(ctx, `

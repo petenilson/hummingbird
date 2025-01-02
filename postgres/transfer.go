@@ -105,7 +105,7 @@ func (ts *TransferService) CreateTransfer(
 	return tx.Commit(ctx)
 }
 
-func (ts *TransferService) FindTransferById(
+func (ts *TransferService) FindTransferByID(
 	ctx context.Context, id int,
 ) (*hummingbird.Transfer, error) {
 	tx, err := ts.db.Begin(ctx)
